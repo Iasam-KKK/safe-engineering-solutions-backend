@@ -1,0 +1,13 @@
+# Copies the SAFE database every night (safe-backup.service).
+#   systemctl list-timers safe-backup.timer       when next
+#   ls -lh /srv/safe/backups                      the copies
+[Unit]
+Description=SAFE: copy the database every night
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 UTC
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

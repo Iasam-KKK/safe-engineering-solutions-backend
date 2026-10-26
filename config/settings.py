@@ -26,11 +26,13 @@ CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 # The public Next.js site. Used for "View on site" links in the admin and for
 # telling Next.js to refresh pages when content changes.
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000").rstrip("/")
+# where Django reaches the site to refresh its pages; on the server the site's own local address
+REVALIDATE_BASE = env("REVALIDATE_BASE", default=FRONTEND_URL).rstrip("/")
 # Shared secret for POST {FRONTEND_URL}/api/revalidate. Leave empty to skip.
 REVALIDATE_SECRET = env("REVALIDATE_SECRET", default="")
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "config.apps.SafeAdminConfig",  # Django's admin, counting new requests and Drive imports
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -157,6 +159,10 @@ if env("EMAIL_HOST", default=""):
     }
 else:
     MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
+    # Live without EMAIL_HOST yet: requests are still kept in the admin and the alerts go to the
+    # service's log, so Django's deploy check (which would stop every deploy) lets this pass.
+    if not DEBUG:
+        SILENCED_SYSTEM_CHECKS = ["mail.E001"]
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="SAFE website <no-reply@localhost>")
 # Who gets an email for every new quote / consultation request (comma separated)
 INQUIRY_NOTIFY_EMAILS = env.list("INQUIRY_NOTIFY_EMAILS", default=[])

@@ -6,14 +6,16 @@
 
 With GOOGLE_SERVICE_ACCOUNT_FILE and DRIVE_FOLDER_ID set, the folder is mirrored through the
 Drive API (sheets and docs included). Nothing is imported when nothing changed. New projects
-arrive as drafts; team, partners, reviews and contact details are updated in place. A summary
-goes to IMPORT_NOTIFY_EMAILS when something new arrived.
+arrive as drafts; team, partners, reviews and contact details are updated in place. A summary of
+what arrived (or why a sync failed) is kept in the admin under "Drive imports", and is also emailed
+to IMPORT_NOTIFY_EMAILS when that and the email settings are set.
 """
 
 import os
 import time
 from pathlib import Path
 
+import requests
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.management.base import BaseCommand, CommandError
@@ -22,6 +24,7 @@ from django.utils import timezone
 from content.sheets_import import sync_content
 from portfolio import drive_sync
 from portfolio.importer import run_import
+from portfolio.models import DriveImport
 
 LOCK_MAX_AGE = 3 * 3600  # a crashed run's lock is ignored after 3 hours
 
@@ -47,10 +50,13 @@ class Command(BaseCommand):
                 self.cycle(o)
             except drive_sync.DriveError as exc:  # setup problem: say what to fix, no traceback
                 self.log(f"sync failed: {exc}", error=True)
+                self.record_failure(str(exc))
                 if not o["watch"]:
                     raise CommandError(str(exc)) from None
             except Exception as exc:  # keep watching after a network hiccup
                 self.log(f"sync failed: {exc}", error=True)
+                if not isinstance(exc, requests.RequestException):  # a hiccup isn't worth a note
+                    self.record_failure(f"{type(exc).__name__}: {exc}")
                 if not o["watch"]:
                     raise
             if not o["watch"]:
@@ -86,6 +92,8 @@ class Command(BaseCommand):
                 say("CHECK: " + w)
             if not o["dry_run"]:
                 sync_content(root, say=say, force=o["force"])
+                if notes:  # the admin's "Drive imports" list: works with or without email
+                    DriveImport.objects.create(summary="\n".join(notes))
             self.notify(notes)
         finally:
             lock.unlink(missing_ok=True)
@@ -107,6 +115,16 @@ class Command(BaseCommand):
         for path in rep.removed:
             self.log(f"  removed on Drive: {path}")
         return mirror_dir, rep.changed
+
+    def record_failure(self, summary: str):
+        """A failed sync shows in the admin's Drive imports, once until someone ticks it checked."""
+        try:
+            last = DriveImport.objects.first()
+            if last and last.failed and not last.checked and last.summary == summary:
+                return
+            DriveImport.objects.create(summary=summary, failed=True)
+        except Exception as exc:  # e.g. the database itself is the problem
+            self.log(f"couldn't note the failure in the admin: {exc}", error=True)
 
     def notify(self, notes: list[str]):
         if not settings.IMPORT_NOTIFY_EMAILS or not notes:

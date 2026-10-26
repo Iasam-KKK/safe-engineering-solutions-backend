@@ -1,0 +1,37 @@
+# The SAFE API: Django under gunicorn on 127.0.0.1:8100, behind Nginx on api.<domain>.
+# Installed by deploy/bootstrap.sh. Each deploy puts the code in /srv/safe/api/releases/<name>,
+# points /srv/safe/api/current at it and restarts this service (deploy/release-api.sh).
+[Unit]
+Description=SAFE API (Django, gunicorn on 127.0.0.1:8100)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=safe
+Group=safe
+WorkingDirectory=/srv/safe/api/current
+# DEBUG stays off even if the env file forgets it (values in the file win over this line).
+Environment=DJANGO_DEBUG=false
+EnvironmentFile=/etc/safe/api.env
+# gunicorn's control socket; its default (~/.gunicorn) is read-only under ProtectSystem.
+RuntimeDirectory=safe-api
+# 2 workers: the VPS is shared with the owner's portfolio. 300 s: the admin's "Add files" box
+# splits PDF sets into sheets while the request waits.
+ExecStart=/srv/safe/api/current/.venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8100 --workers 2 --timeout 300 --error-logfile - \
+    --control-socket /run/safe-api/gunicorn.ctl
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# uploads (pictures, drawings, videos), clients' attachments, and the Drive mirror
+ReadWritePaths=/srv/safe/media /srv/safe/private_media /srv/safe/drive_mirror
+
+[Install]
+WantedBy=multi-user.target

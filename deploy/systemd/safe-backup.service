@@ -1,0 +1,21 @@
+# A nightly copy of the SAFE database in /srv/safe/backups (deploy/backup-db.sh keeps the newest 14).
+# Run by safe-backup.timer. Logs: journalctl -u safe-backup
+[Unit]
+Description=SAFE: copy the database to /srv/safe/backups
+After=postgresql.service
+# nothing to copy until the first deploy
+ConditionPathExists=/srv/safe/api/current
+
+[Service]
+Type=oneshot
+User=safe
+Group=safe
+EnvironmentFile=/etc/safe/api.env
+ExecStart=/bin/sh /srv/safe/api/current/deploy/backup-db.sh nightly
+Nice=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/safe/backups

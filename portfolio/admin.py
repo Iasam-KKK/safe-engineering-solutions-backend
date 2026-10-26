@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.utils.html import format_html
 
-from .models import Category, Project, ProjectFact, ProjectMedia
+from .models import Category, DriveImport, Project, ProjectFact, ProjectMedia
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -52,6 +52,32 @@ def thumb(field, size=72, contain=True):
         '<img src="{}" style="width:{}px;height:{}px;object-fit:{};background:#fff;border:1px solid #ccc">',
         field.url, size, size, fit,
     )
+
+
+@admin.register(DriveImport)
+class DriveImportAdmin(admin.ModelAdmin):
+    """Each Drive sync that loaded something (or failed) leaves its summary here."""
+
+    list_display = ["created_at", "result", "what_arrived", "checked"]
+    list_editable = ["checked"]
+    list_filter = ["checked", "failed"]
+    fields = ["created_at", "result", "summary", "checked"]
+    readonly_fields = ["created_at", "result", "summary"]
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.display(description="Result")
+    def result(self, obj):
+        return "Failed" if obj.failed else "Loaded"
+
+    @admin.display(description="What arrived")
+    def what_arrived(self, obj):
+        lines = [line.strip() for line in obj.summary.splitlines() if line.strip()]
+        text = "; ".join(lines[:2])
+        if len(text) > 160:
+            text = text[:157] + "..."
+        return text + (f" (+{len(lines) - 2} more)" if len(lines) > 2 else "")
 
 
 @admin.register(Category)

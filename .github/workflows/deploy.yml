@@ -1,0 +1,137 @@
+# Tests the API on every push; on main it then puts it live on the VPS (deploy/release-api.sh).
+# The server side is set up once with deploy/bootstrap.sh. The deploy settings are REPOSITORY
+# secrets and variables (Settings > Secrets and variables > Actions), set by
+# deploy/set-github-secrets.ps1 for both SAFE repos at once. deploy/README.md explains each one.
+name: Test and deploy the API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# One run at a time per branch, so two deploys never overlap.
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: false
+
+# The jobs only read the repo; the deploy logs in with its own SSH key, not GitHub's token.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The server runs Ubuntu 26.04's Python 3.14.
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Tests
+        env:
+          DJANGO_DEBUG: "true"
+          DJANGO_SECRET_KEY: only-for-the-tests
+        run: |
+          python manage.py check
+          # a model change without its migration would break the live database
+          python manage.py makemigrations --check --dry-run
+          python manage.py test
+
+      - name: The live settings' own checks
+        env:
+          DJANGO_DEBUG: "false"
+          DJANGO_SECRET_KEY: only-for-this-check-${{ github.run_id }}-a-long-random-looking-string
+          DJANGO_ALLOWED_HOSTS: example.com
+        run: python manage.py check --deploy --fail-level ERROR
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Every way these settings went wrong before gets its own message here, before any login.
+      - name: Check the deploy settings
+        id: settings
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          SAFE_DOMAIN: ${{ vars.SAFE_DOMAIN }}
+          # the same names in the wrong place: only used to say so
+          HOST_AS_VARIABLE: ${{ vars.DEPLOY_HOST }}
+          DOMAIN_AS_SECRET: ${{ secrets.SAFE_DOMAIN }}
+        run: |
+          fail() { echo "::error title=Deploy settings::$*"; exit 1; }
+          WHERE="in this repo ($GITHUB_REPOSITORY), Settings > Secrets and variables > Actions"
+          missing=""
+          [ -n "$DEPLOY_HOST" ] || missing="$missing DEPLOY_HOST"
+          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY"
+          [ -n "$DEPLOY_KNOWN_HOSTS" ] || missing="$missing DEPLOY_KNOWN_HOSTS"
+          [ -n "$SAFE_DOMAIN" ] || missing="$missing SAFE_DOMAIN"
+          if [ "$missing" = " DEPLOY_HOST DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS SAFE_DOMAIN" ] && [ -z "$HOST_AS_VARIABLE$DOMAIN_AS_SECRET" ]; then
+            echo "::warning title=Not deployed::No deploy settings $WHERE. Tests passed; nothing went live. Set them with deploy/set-github-secrets.ps1."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [ -z "$HOST_AS_VARIABLE" ] || [ -n "$DEPLOY_HOST" ] || fail "DEPLOY_HOST is saved as a variable; it must be a secret ($WHERE, Secrets tab)."
+          [ -z "$DOMAIN_AS_SECRET" ] || [ -n "$SAFE_DOMAIN" ] || fail "SAFE_DOMAIN is saved as a secret; it must be a variable ($WHERE, Variables tab)."
+          [ -z "$missing" ] || fail "Missing$missing $WHERE. Secrets: DEPLOY_HOST, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS. Variable: SAFE_DOMAIN. The other SAFE repo needs the same four."
+
+          # Pasted values can carry Windows line endings, spaces, a scheme or a user name.
+          HOST=$(printf '%s' "$DEPLOY_HOST" | tr -d '[:space:]')
+          HOST=${HOST#*://}; HOST=${HOST%%/*}; HOST=${HOST#*@}
+          if ! printf '%s' "$HOST" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
+            fail "DEPLOY_HOST must be the server's IPv4 address (four numbers with dots), not a domain name: the domain goes through Cloudflare's proxy, which doesn't carry SSH."
+          fi
+          DOMAIN=$(printf '%s' "$SAFE_DOMAIN" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+          case $DOMAIN in
+            *://*|*/*|www.*|api.*) fail "SAFE_DOMAIN must be the bare domain, like example.com: no https://, www., api. or slash. It is: $DOMAIN" ;;
+          esac
+          printf '%s' "$DOMAIN" | grep -Eq '^[a-z0-9-]+(\.[a-z0-9-]+)+$' || fail "SAFE_DOMAIN \"$DOMAIN\" isn't a domain name."
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          grep -q 'PRIVATE KEY-----' ~/.ssh/deploy || fail "DEPLOY_SSH_KEY isn't a private key. It is the whole file safe_deploy (not safe_deploy.pub), from -----BEGIN to -----END."
+          ssh-keygen -y -f ~/.ssh/deploy < /dev/null > /dev/null 2>&1 || fail "DEPLOY_SSH_KEY can't be read: cut short, or protected by a passphrase. Make it again with deploy/set-github-secrets.ps1."
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          ssh-keygen -F "$HOST" -f ~/.ssh/known_hosts > /dev/null || fail "DEPLOY_KNOWN_HOSTS has no line for the address in DEPLOY_HOST. Make it again with deploy/set-github-secrets.ps1."
+
+          echo "DEPLOY_IP=$HOST" >> "$GITHUB_ENV"
+          echo "SAFE_DOMAIN=$DOMAIN" >> "$GITHUB_ENV"
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy
+        if: steps.settings.outputs.deploy == 'true'
+        run: |
+          # GitHub's runners have no IPv6: connect over IPv4 only.
+          SSH="ssh -4 -i $HOME/.ssh/deploy -o BatchMode=yes -o ConnectTimeout=30"
+          if ! $SSH "safe@$DEPLOY_IP" true 2> ssh-error.txt; then
+            echo "::error::Could not log in to the server as safe: $(tr '\n' ' ' < ssh-error.txt)"
+            timeout 10 bash -c "</dev/tcp/$DEPLOY_IP/22" && echo "Port 22 answers, so the key is the problem: run bootstrap.sh with this key's .pub." || echo "Port 22 does not answer from this runner."
+            exit 1
+          fi
+          NAME=$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}
+          # Unchanged files are hard-linked from the live copy, so only changes travel.
+          LINK=""
+          $SSH "safe@$DEPLOY_IP" "test -d /srv/safe/api/current" && LINK="--link-dest=/srv/safe/api/current/"
+          rsync -az -e "$SSH" $LINK \
+            --exclude=.git --exclude=.github --exclude=.venv --exclude=__pycache__ --exclude='*-key.json' \
+            --exclude=/.env --exclude=/db.sqlite3 --exclude=/media --exclude=/private_media \
+            --exclude=/drive_mirror --exclude=/staticfiles --exclude=/test_media_tmp \
+            ./ "safe@$DEPLOY_IP:/srv/safe/api/releases/$NAME/"
+          $SSH "safe@$DEPLOY_IP" "sh /srv/safe/api/releases/$NAME/deploy/release-api.sh $NAME"
+
+      - name: Check it from outside
+        if: steps.settings.outputs.deploy == 'true'
+        run: curl -fsS --retry 3 --retry-delay 5 "https://api.$SAFE_DOMAIN/api/health/"

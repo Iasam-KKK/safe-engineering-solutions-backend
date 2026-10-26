@@ -1,0 +1,30 @@
+# The SAFE website: the Next.js standalone server on 127.0.0.1:3100, behind Nginx on <domain>.
+# Installed by deploy/bootstrap.sh. The site's GitHub Actions workflow builds it, uploads it to
+# /srv/safe/web/releases/<name>, points /srv/safe/web/current at it and restarts this service.
+[Unit]
+Description=SAFE website (Next.js on 127.0.0.1:3100)
+After=network.target safe-api.service
+
+[Service]
+User=safe
+Group=safe
+WorkingDirectory=/srv/safe/web/current
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=3100
+# API_URL (the API on 127.0.0.1:8100) and REVALIDATE_SECRET (shared with the API)
+EnvironmentFile=/etc/safe/web.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# Next.js keeps its page and image caches under .next/ in the release.
+ReadWritePaths=/srv/safe/web
+
+[Install]
+WantedBy=multi-user.target

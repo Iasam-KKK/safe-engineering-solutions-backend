@@ -23,7 +23,7 @@ log = logging.getLogger("safe.revalidate")
 
 
 def _post(tags):
-    url = settings.FRONTEND_URL + "/api/revalidate"
+    url = settings.REVALIDATE_BASE + "/api/revalidate"
     body = json.dumps({"tags": sorted(tags)}).encode()
     req = urllib.request.Request(
         url,

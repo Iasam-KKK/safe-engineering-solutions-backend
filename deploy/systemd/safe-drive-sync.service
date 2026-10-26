@@ -1,0 +1,28 @@
+# One check of the team's Google Drive folder ("SES Website Data"): new or changed files are
+# downloaded and imported (projects as drafts; team, partners, reviews, contact details).
+# Run every 15 minutes by safe-drive-sync.timer. Logs: journalctl -u safe-drive-sync
+[Unit]
+Description=SAFE: load new files from the team's Google Drive
+After=network-online.target safe-api.service postgresql.service
+Wants=network-online.target
+# nothing to do until the Google key is on the server (deploy/README.md, "Drive sync")
+ConditionPathExists=/etc/safe/drive-sync-key.json
+
+[Service]
+Type=oneshot
+User=safe
+Group=safe
+WorkingDirectory=/srv/safe/api/current
+Environment=DJANGO_DEBUG=false
+EnvironmentFile=/etc/safe/api.env
+ExecStart=/srv/safe/api/current/.venv/bin/python manage.py sync_drive
+TimeoutStartSec=2h
+# imports (PDF pages, video compression) yield to the websites
+Nice=10
+IOSchedulingClass=idle
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/safe/media /srv/safe/private_media /srv/safe/drive_mirror

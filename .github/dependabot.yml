@@ -1,0 +1,7 @@
+# The workflow's actions are pinned to exact commits; this proposes updates once a month.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

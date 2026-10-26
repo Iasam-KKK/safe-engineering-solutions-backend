@@ -1,11 +1,34 @@
+import atexit
+import json
+import shutil
+import tempfile
 from io import StringIO
+from pathlib import Path
 from unittest import mock
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
 from content.models import Partner
+from portfolio.management.commands.seed_design import DEFAULT_ASSETS, SEED
 from portfolio.models import Category, Project
+
+
+def seed_assets() -> str:
+    """The design's image folder. Where it isn't (GitHub Actions has only this repo), small
+    stand-in pictures with the same names, so the seed and these tests still run."""
+    if DEFAULT_ASSETS.is_dir():
+        return str(DEFAULT_ASSETS)
+    from PIL import Image
+
+    folder = Path(tempfile.mkdtemp(prefix="seed-assets-"))
+    atexit.register(shutil.rmtree, folder, True)
+    for p in json.loads(SEED.read_text(encoding="utf-8"))["projects"]:
+        for m in p["media"]:
+            for key in ("image", "before_image"):
+                if m.get(key):
+                    Image.new("RGB", (64, 48), (200, 200, 200)).save(folder / m[key], "JPEG")
+    return str(folder)
 
 
 @override_settings(MEDIA_ROOT="test_media_tmp", REVALIDATE_SECRET="")
@@ -14,7 +37,7 @@ class SeededApiTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        call_command("seed_design", stdout=StringIO())
+        call_command("seed_design", assets=seed_assets(), stdout=StringIO())
 
     @classmethod
     def tearDownClass(cls):
@@ -85,7 +108,7 @@ class AdminScreensTests(TestCase):
     def setUpTestData(cls):
         from django.contrib.auth.models import User
 
-        call_command("seed_design", stdout=StringIO())
+        call_command("seed_design", assets=seed_assets(), stdout=StringIO())
         User.objects.create_superuser("saif", "s@example.com", "pw-123456!")
 
     def setUp(self):

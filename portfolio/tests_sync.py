@@ -13,7 +13,7 @@ from django.test import TestCase, override_settings
 from PIL import Image
 
 from content.models import Partner, Review, SiteSettings, TeamMember
-from portfolio.models import Category, Project
+from portfolio.models import Category, DriveImport, Project
 
 FOLDER = "application/vnd.google-apps.folder"
 SHEET = "application/vnd.google-apps.spreadsheet"
@@ -165,12 +165,24 @@ class SyncDriveTests(TestCase):
         self.assertIn("new or changed: 01 Projects/Modular homes/Floating homes/j 1065 floating house R3.pdf", out)
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("floating house", mail.outbox[0].body.lower())
+        note = DriveImport.objects.get()                       # and the same summary in the admin
+        self.assertFalse(note.failed)
+        self.assertIn("floating house", note.summary.lower())
+
+    @override_settings(IMPORT_NOTIFY_EMAILS=[])
+    def test_without_email_the_summary_is_still_in_the_admin(self):
+        from django.core import mail
+
+        self.sync()
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(DriveImport.objects.count(), 1)
 
     def test_second_sync_without_changes_does_nothing(self):
         self.sync()
         out = self.sync()
         self.assertIn("no changes", out)
         self.assertEqual(Project.objects.get(slug="floating-house").media.count(), 2)
+        self.assertEqual(DriveImport.objects.count(), 1)       # no note for "nothing new"
 
     def test_new_file_is_picked_up(self):
         self.sync()
@@ -210,6 +222,30 @@ class SyncDriveSetupTests(TestCase):
         with override_settings(DRIVE_MIRROR_DIR=mirror), mock.patch("portfolio.drive_sync.session", return_value=DriveOff()):
             with self.assertRaisesMessage(CommandError, "Google Drive API is switched off"):
                 call_command("sync_drive", stdout=StringIO())
+            with self.assertRaises(CommandError):               # every 15 minutes on the server...
+                call_command("sync_drive", stdout=StringIO())
+        note = DriveImport.objects.get()                       # ...but one note in the admin
+        self.assertTrue(note.failed)
+        self.assertIn("switched off", note.summary)
+
+
+class AdminAlertTests(TestCase):
+    """Without email, the admin's home page is where new requests and Drive imports show up."""
+
+    def test_home_counts_what_needs_a_look(self):
+        from django.contrib.auth.models import User
+
+        from leads.models import Inquiry
+
+        Inquiry.objects.create(kind=Inquiry.Kind.choices[0][0], name="A", email="a@example.com", details="x")
+        DriveImport.objects.create(summary="Floating house: 2 new sheets")
+        DriveImport.objects.create(summary="older", checked=True)
+        User.objects.create_superuser("saif", "s@example.com", "pw-123456!")
+        self.client.login(username="saif", password="pw-123456!")
+        page = self.client.get("/admin/").content.decode()
+        self.assertIn("Inquiries (1 new)", page)
+        self.assertIn("Drive imports (1 new)", page)
+        self.assertEqual(self.client.get("/admin/portfolio/driveimport/").status_code, 200)
 
     def test_missing_key_file_spots_the_double_extension(self):
         from portfolio import drive_sync

@@ -311,3 +311,21 @@ class ProjectMedia(models.Model):
             raise ValidationError({"image": "Upload an image, or pick a placeholder sketch until the image arrives."})
         if self.before_image and not self.before_alt:
             raise ValidationError({"before_alt": "Describe the before image too."})
+
+
+class DriveImport(models.Model):
+    """What one Drive sync loaded, or why it failed. Kept in the admin, so nothing depends on email."""
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    summary = models.TextField()
+    failed = models.BooleanField(default=False)
+    checked = models.BooleanField(default=False, help_text="Tick once you've looked at what arrived.")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Drive import"
+        verbose_name_plural = "Drive imports"
+
+    def __str__(self):
+        when = f"{self.created_at:%Y-%m-%d %H:%M}" if self.created_at else "new"
+        return f"{when} ({'failed' if self.failed else 'loaded'})"

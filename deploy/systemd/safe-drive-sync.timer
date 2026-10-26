@@ -1,0 +1,14 @@
+# Checks the team's Google Drive every 15 minutes (safe-drive-sync.service).
+#   sudo systemctl enable --now safe-drive-sync.timer      on
+#   sudo systemctl disable --now safe-drive-sync.timer     off
+#   systemctl list-timers safe-drive-sync.timer            when next
+[Unit]
+Description=SAFE: check the team's Google Drive every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
