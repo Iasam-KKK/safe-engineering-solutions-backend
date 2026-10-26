@@ -1,0 +1,1228 @@
+{
+ "categories": [
+  {
+   "slug": "home-modification",
+   "name": "Home modification",
+   "home_label": "HOUSE MODIFICATION",
+   "order": 1,
+   "home_order": 2,
+   "show_in_filter": true,
+   "show_on_home": true,
+   "intro": "Extensions, additions and renovations of existing homes, from measured existing conditions to a permit-ready set."
+  },
+  {
+   "slug": "new-residential",
+   "name": "New residential",
+   "home_label": "NEW HOME",
+   "order": 2,
+   "home_order": 1,
+   "show_in_filter": true,
+   "show_on_home": true,
+   "intro": "New homes: architectural drawings, models and renders."
+  },
+  {
+   "slug": "new-commercial",
+   "name": "New commercial",
+   "home_label": "COMMERCIAL",
+   "order": 3,
+   "home_order": 3,
+   "show_in_filter": true,
+   "show_on_home": true,
+   "intro": "Hotels, retail, offices and industrial buildings: design drawings, models and renders."
+  },
+  {
+   "slug": "adu-and-garage",
+   "name": "ADU and garage",
+   "home_label": "ADU",
+   "order": 4,
+   "home_order": 4,
+   "show_in_filter": true,
+   "show_on_home": true,
+   "intro": "Accessory dwelling units and garages, including MEP sheets."
+  },
+  {
+   "slug": "garage",
+   "name": "Garage",
+   "home_label": "GARAGE",
+   "order": 9,
+   "home_order": 5,
+   "show_in_filter": false,
+   "show_on_home": true,
+   "intro": ""
+  },
+  {
+   "slug": "mep",
+   "name": "MEP",
+   "home_label": "MEP",
+   "order": 5,
+   "home_order": 9,
+   "show_in_filter": true,
+   "show_on_home": false,
+   "intro": "Plumbing, electrical and mechanical sheets with load calculations."
+  },
+  {
+   "slug": "structures",
+   "name": "Structures",
+   "home_label": "STRUCTURES",
+   "order": 6,
+   "home_order": 6,
+   "show_in_filter": true,
+   "show_on_home": true,
+   "intro": "Structural engineering: telecom steel structures, solar panel stands and other steel, concrete and timber work."
+  },
+  {
+   "slug": "modular-homes",
+   "name": "Modular homes",
+   "home_label": "MODULAR HOMES",
+   "order": 7,
+   "home_order": 7,
+   "show_in_filter": true,
+   "show_on_home": true,
+   "intro": "Container homes, floating houses, greenhouses and other modular builds."
+  },
+  {
+   "slug": "civil",
+   "name": "Civil",
+   "home_label": "CIVIL",
+   "order": 8,
+   "home_order": 10,
+   "show_in_filter": true,
+   "show_on_home": false,
+   "intro": "Land and site planning, lot subdivision, storm and drainage design."
+  }
+ ],
+ "projects": [
+  {
+   "title": "Home extension",
+   "slug": "home-extension",
+   "subtitle": "Cabin renovation with a new porch and a covered link to the garage",
+   "location": "United States",
+   "categories": [
+    "home-modification"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Existing conditions, design, permit set"
+    },
+    {
+     "label": "DELIVERED",
+     "value": "8 sheets after 3 revision rounds"
+    }
+   ],
+   "media": [
+    {
+     "title": "3D model",
+     "kind": "sheet",
+     "image": "model_proposed.jpg",
+     "alt": "3D model of the proposed renovation with a wraparound porch and a link to the garage",
+     "before_image": "model_existing.jpg",
+     "before_alt": "3D model of the existing cabin and detached garage",
+     "before_label": "EXISTING",
+     "after_label": "PROPOSED",
+     "before_missing_note": "",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Sketch to sheet",
+     "kind": "render",
+     "image": "pair_sheet.jpg",
+     "alt": "Sheet A103, the proposed first floor plan drawn from that sketch",
+     "before_image": "pair_sketch.jpg",
+     "before_alt": "The owners' hand sketch of the layout they wanted",
+     "before_label": "CLIENT SKETCH",
+     "after_label": "SHEET A103",
+     "before_missing_note": "",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Floor plan",
+     "kind": "sheet",
+     "image": "pair_plan_proposed.jpg",
+     "alt": "Proposed first floor plan with a new master suite, kitchen and deck",
+     "before_image": "pair_plan_existing.jpg",
+     "before_alt": "Existing first floor plan",
+     "before_label": "EXISTING",
+     "after_label": "PROPOSED",
+     "before_missing_note": "",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "East elevation",
+     "kind": "sheet",
+     "image": "pair_elev_proposed.jpg",
+     "alt": "Proposed east elevation with a full-length covered porch",
+     "before_image": "pair_elev_existing.jpg",
+     "before_alt": "Existing east elevation",
+     "before_label": "EXISTING",
+     "after_label": "PROPOSED",
+     "before_missing_note": "",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Cover sheet",
+     "kind": "sheet",
+     "image": "sheet_A100.jpg",
+     "alt": "Cover sheet A100 with the existing and proposed 3D views",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "A100"
+    },
+    {
+     "title": "Existing first floor",
+     "sheet_no": "A101",
+     "kind": "sheet",
+     "image": "sheet_A101.jpg",
+     "alt": "Existing first floor plan",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Demolition plan",
+     "sheet_no": "A102",
+     "kind": "sheet",
+     "image": "sheet_A102.jpg",
+     "alt": "First floor demolition plan",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Proposed first floor",
+     "sheet_no": "A103",
+     "kind": "sheet",
+     "image": "sheet_A103.jpg",
+     "alt": "Proposed first floor plan",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Existing second floor",
+     "sheet_no": "A104",
+     "kind": "sheet",
+     "image": "sheet_A104.jpg",
+     "alt": "Existing second floor plan",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Existing elevations",
+     "sheet_no": "A105",
+     "kind": "sheet",
+     "image": "sheet_A105.jpg",
+     "alt": "Four existing elevations",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Proposed elevations",
+     "sheet_no": "A106",
+     "kind": "sheet",
+     "image": "sheet_A106.jpg",
+     "alt": "Four proposed elevations",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Roof plan",
+     "sheet_no": "A107",
+     "kind": "sheet",
+     "image": "sheet_A107.jpg",
+     "alt": "Roof plan",
+     "in_gallery": false,
+     "in_pile": true
+    }
+   ],
+   "order": 1,
+   "show_on_home": true,
+   "stage": "running",
+   "stage_label": "PERMIT SET",
+   "stage_date": "",
+   "card_text": "Eight sheets for a cabin renovation with a new porch and a covered link to the garage.",
+   "cover_image": "sheet_A100.jpg"
+  },
+  {
+   "title": "Alexandria residence",
+   "slug": "alexandria-residence",
+   "subtitle": "Two-storey garage addition to an existing home",
+   "location": "Virginia, United States",
+   "categories": [
+    "home-modification"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "Virginia, United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Addition design and renders"
+    }
+   ],
+   "media": [
+    {
+     "title": "Street view",
+     "kind": "render",
+     "image": "alexandria-residence-1.jpg",
+     "alt": "The house with its new two-storey garage addition, rendered",
+     "before_image": null,
+     "before_alt": "",
+     "before_label": "EXISTING",
+     "after_label": "PROPOSED",
+     "before_missing_note": "[Same camera as the proposed render: to add]",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Afternoon",
+     "kind": "render",
+     "image": "alexandria-residence-2.jpg",
+     "alt": "The same house in afternoon light",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    },
+    {
+     "title": "Drive",
+     "kind": "render",
+     "image": "alexandria-residence-3.jpg",
+     "alt": "View up the drive to the new garage",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R03"
+    }
+   ],
+   "order": 2,
+   "show_on_home": true,
+   "stage": "running",
+   "stage_label": "RENDERS",
+   "stage_date": "",
+   "card_text": "A two-storey garage addition to an existing home.",
+   "cover_image": "alexandria-residence-1.jpg"
+  },
+  {
+   "title": "Garage with living space",
+   "slug": "garage-with-living-space",
+   "subtitle": "Detached garage with a room above",
+   "location": "Virginia, United States",
+   "categories": [
+    "adu-and-garage",
+    "garage"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "Virginia, United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Exterior renders, facade options"
+    }
+   ],
+   "media": [
+    {
+     "title": "Scheme 1",
+     "sheet_no": "R01",
+     "kind": "render",
+     "image": "fairfax-pottsbrothers-1.jpg",
+     "alt": "Garage render with warm peach siding",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Scheme 2",
+     "kind": "render",
+     "image": "fairfax-pottsbrothers-3.jpg",
+     "alt": "The new detached garage, rendered",
+     "before_image": null,
+     "before_alt": "",
+     "before_label": "EXISTING",
+     "after_label": "PROPOSED",
+     "before_missing_note": "[Same camera as the proposed render: to add]",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    },
+    {
+     "title": "Facade options",
+     "kind": "render",
+     "image": "fairfax-pottsbrothers-3.jpg",
+     "alt": "Garage render with grey siding and a green garage door",
+     "before_image": "fairfax-pottsbrothers-1.jpg",
+     "before_alt": "Garage render with warm peach siding",
+     "before_label": "SCHEME 1",
+     "after_label": "SCHEME 2",
+     "before_missing_note": "",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Dusk",
+     "kind": "render",
+     "image": "fairfax-pottsbrothers-2.jpg",
+     "alt": "The grey scheme at dusk",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R03"
+    }
+   ],
+   "order": 3,
+   "show_on_home": true,
+   "stage": "running",
+   "stage_label": "RENDERS",
+   "stage_date": "",
+   "card_text": "Two facade schemes for a detached garage with a room above.",
+   "cover_image": "fairfax-pottsbrothers-3.jpg"
+  },
+  {
+   "title": "ADU, Santa Ana CA",
+   "slug": "adu-santa-ana-ca",
+   "subtitle": "Plumbing, electrical and mechanical sheets",
+   "location": "Santa Ana, California",
+   "categories": [
+    "adu-and-garage",
+    "mep"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "Santa Ana, California"
+    },
+    {
+     "label": "SHEETS",
+     "value": "P101, P102, E101, M101, M102"
+    },
+    {
+     "label": "CODES",
+     "value": "California Plumbing Code, California Electrical Code"
+    }
+   ],
+   "media": [
+    {
+     "title": "Plumbing plan",
+     "kind": "sheet",
+     "image": "mep_plumbing_plan.jpg",
+     "alt": "Plumbing plan with hot and cold water runs and tagged fittings",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "P101"
+    },
+    {
+     "title": "Water riser",
+     "kind": "sheet",
+     "image": "mep_riser_iso.jpg",
+     "alt": "Isometric domestic water riser diagram with pipe sizes",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "RISER"
+    },
+    {
+     "title": "Electrical plan",
+     "kind": "sheet",
+     "image": "mep_electrical_plan.jpg",
+     "alt": "Electrical plan with lighting, receptacles and circuits",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "E101"
+    },
+    {
+     "title": "Mechanical plan",
+     "kind": "sheet",
+     "image": "mep_mechanical_plan.jpg",
+     "alt": "Mechanical plan with indoor units, line sets and exhaust",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "M101"
+    }
+   ],
+   "order": 4,
+   "show_on_home": true,
+   "stage": "running",
+   "stage_label": "MEP SHEETS",
+   "stage_date": "",
+   "card_text": "Plumbing, sanitary, electrical and mechanical sheets with load calculations.",
+   "cover_image": "mep_plumbing_plan.jpg"
+  },
+  {
+   "title": "Pelican House",
+   "slug": "pelican-house",
+   "subtitle": "New waterfront home, exteriors and interiors",
+   "location": "Exuma, Bahamas",
+   "categories": [
+    "new-residential"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "Exuma, Bahamas"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Exterior and interior renders"
+    }
+   ],
+   "media": [
+    {
+     "title": "Approach",
+     "kind": "render",
+     "image": "pelican-exterior-1.jpg",
+     "alt": "Pelican House seen from the drive with palms and the sea behind",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Dock",
+     "kind": "render",
+     "image": "pelican-exterior-3.jpg",
+     "alt": "Covered dock and plunge pool facing the water",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    },
+    {
+     "title": "Living room",
+     "kind": "render",
+     "image": "pelican-interior-1.jpg",
+     "alt": "Open kitchen, dining and living room",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R03"
+    },
+    {
+     "title": "Kitchen",
+     "kind": "render",
+     "image": "pelican-interior-2.jpg",
+     "alt": "Kitchen island with the living room beyond",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R04"
+    }
+   ],
+   "order": 5,
+   "show_on_home": true
+  },
+  {
+   "title": "Residential render studies",
+   "slug": "residential-render-studies",
+   "subtitle": "Single-storey homes with decks and a pool",
+   "location": "United States",
+   "categories": [
+    "new-residential"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Architectural visualization"
+    }
+   ],
+   "media": [
+    {
+     "title": "Deck",
+     "kind": "render",
+     "image": "usa-renders-1.jpg",
+     "alt": "Home with a raised deck and pergola",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Side",
+     "kind": "render",
+     "image": "usa-renders-2.jpg",
+     "alt": "White single-storey home among trees",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    },
+    {
+     "title": "Pool",
+     "kind": "render",
+     "image": "usa-renders-3.jpg",
+     "alt": "Pool deck in front of a glazed living room",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R03"
+    }
+   ],
+   "order": 6,
+   "show_on_home": true
+  },
+  {
+   "title": "Woodland cabin",
+   "slug": "woodland-cabin",
+   "subtitle": "Lighting study for a cabin among pines",
+   "location": "United States",
+   "categories": [
+    "new-residential"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Architecture and exterior renders"
+    }
+   ],
+   "media": [
+    {
+     "title": "Sunset",
+     "sheet_no": "R01",
+     "kind": "render",
+     "image": "woodland-cabin-2.jpg",
+     "alt": "Cabin among pines at sunset",
+     "in_gallery": false,
+     "in_pile": true
+    },
+    {
+     "title": "Evening",
+     "kind": "render",
+     "image": "woodland-cabin-3.jpg",
+     "alt": "The same view in the evening with the interior lights on",
+     "before_image": "woodland-cabin-2.jpg",
+     "before_alt": "Cabin among pines at sunset",
+     "before_label": "SUNSET",
+     "after_label": "EVENING",
+     "before_missing_note": "",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    }
+   ],
+   "order": 7,
+   "show_on_home": true
+  },
+  {
+   "title": "Resort hotel",
+   "slug": "resort-hotel",
+   "subtitle": "Curved hotel block with a stepped fountain and pool",
+   "location": "",
+   "categories": [
+    "new-commercial"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Building and landscape model, renders, walkthrough"
+    }
+   ],
+   "media": [
+    {
+     "title": "Pool terrace",
+     "kind": "render",
+     "image": "render_hotel_hero.jpg",
+     "alt": "Hotel block above a curved infinity pool",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Fountain",
+     "kind": "render",
+     "image": "render_waterfall.jpg",
+     "alt": "Stepped fountain with a curtain of water",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    }
+   ],
+   "order": 8,
+   "show_on_home": true
+  },
+  {
+   "title": "Strip mall and restaurant",
+   "slug": "strip-mall-and-restaurant",
+   "subtitle": "Retail rows, parking and landscaping",
+   "location": "United States",
+   "categories": [
+    "new-commercial"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Commercial visualization"
+    }
+   ],
+   "media": [
+    {
+     "title": "Aerial",
+     "kind": "render",
+     "image": "strip-mall-qsr-1.jpg",
+     "alt": "Aerial view of two retail buildings around a parking lot",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    }
+   ],
+   "order": 9,
+   "show_on_home": true
+  },
+  {
+   "title": "Warehouse and logistics facility",
+   "slug": "warehouse-and-logistics-facility",
+   "subtitle": "Industrial site with container storage",
+   "location": "",
+   "categories": [
+    "new-commercial"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Industrial visualization"
+    }
+   ],
+   "media": [
+    {
+     "title": "Yard",
+     "kind": "render",
+     "image": "warehouse-render-1.jpg",
+     "alt": "Warehouse yard with containers and a branded gate",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Loading side",
+     "kind": "render",
+     "image": "warehouse-render-2.jpg",
+     "alt": "Retaining wall and loading side of the warehouse",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    }
+   ],
+   "order": 10,
+   "show_on_home": true
+  },
+  {
+   "title": "Training Center of Excellence",
+   "slug": "training-center-of-excellence",
+   "subtitle": "Offices reimagined as reception, waiting and training rooms",
+   "location": "",
+   "categories": [
+    "new-commercial"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Interior renovation visualization"
+    }
+   ],
+   "media": [
+    {
+     "title": "Training room",
+     "kind": "render",
+     "image": "training-center-1.jpg",
+     "alt": "Training room with rows of desks and a grid ceiling",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Second room",
+     "kind": "render",
+     "image": "training-center-2.jpg",
+     "alt": "Another training room layout",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    },
+    {
+     "title": "Front",
+     "kind": "render",
+     "image": "training-center-3.jpg",
+     "alt": "Training room seen from the front",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R03"
+    }
+   ],
+   "order": 11,
+   "show_on_home": true
+  },
+  {
+   "title": "Pavilion and courtyard",
+   "slug": "pavilion-and-courtyard",
+   "subtitle": "Covered outdoor space beside a commercial building",
+   "location": "United States",
+   "categories": [
+    "new-commercial"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "United States"
+    },
+    {
+     "label": "SCOPE",
+     "value": "Exterior visualization"
+    }
+   ],
+   "media": [
+    {
+     "title": "Pavilion",
+     "kind": "render",
+     "image": "exterior-residence-1.jpg",
+     "alt": "Covered pavilion with a timber slat ceiling and seating",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R01"
+    },
+    {
+     "title": "Courtyard",
+     "kind": "render",
+     "image": "exterior-residence-2.jpg",
+     "alt": "Courtyard seen from under the pavilion",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R02"
+    },
+    {
+     "title": "Parking",
+     "kind": "render",
+     "image": "exterior-residence-3.jpg",
+     "alt": "Parking court beside the building",
+     "in_gallery": true,
+     "in_pile": true,
+     "sheet_no": "R03"
+    }
+   ],
+   "order": 12,
+   "show_on_home": true
+  },
+  {
+   "title": "Residence, Rialto CA",
+   "slug": "residence-rialto-ca",
+   "subtitle": "Plumbing, electrical and mechanical sheets",
+   "location": "Rialto, California",
+   "categories": [
+    "mep"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "Rialto, California"
+    },
+    {
+     "label": "SHEETS",
+     "value": "P101, P102, E101, M101, M102"
+    }
+   ],
+   "media": [
+    {
+     "title": "Plumbing",
+     "kind": "sheet",
+     "image": "mep_rialto_P101.jpg",
+     "alt": "Sheet P101, proposed plumbing plan",
+     "sheet_no": "P101",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Electrical",
+     "kind": "sheet",
+     "image": "mep_rialto_E101.jpg",
+     "alt": "Sheet E101, electrical plans and load calculations",
+     "sheet_no": "E101",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Mechanical",
+     "kind": "sheet",
+     "image": "mep_rialto_M101.jpg",
+     "alt": "Sheet M101, mechanical drawings",
+     "sheet_no": "M101",
+     "in_gallery": true,
+     "in_pile": false
+    }
+   ],
+   "order": 13,
+   "show_on_home": false
+  },
+  {
+   "title": "Residence, Beverly Hills CA",
+   "slug": "residence-beverly-hills-ca",
+   "subtitle": "Plumbing and sanitary sheets",
+   "location": "Beverly Hills, California",
+   "categories": [
+    "mep"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "Beverly Hills, California"
+    },
+    {
+     "label": "SHEETS",
+     "value": "P101, P102"
+    }
+   ],
+   "media": [
+    {
+     "title": "Plumbing",
+     "kind": "sheet",
+     "image": "mep_beverly_P101.jpg",
+     "alt": "Sheet P101, proposed plumbing plan",
+     "sheet_no": "P101",
+     "in_gallery": true,
+     "in_pile": false
+    },
+    {
+     "title": "Sanitary",
+     "kind": "sheet",
+     "image": "mep_beverly_P102.jpg",
+     "alt": "Sheet P102, proposed sanitary plan",
+     "sheet_no": "P102",
+     "in_gallery": true,
+     "in_pile": false
+    }
+   ],
+   "order": 14,
+   "show_on_home": false
+  },
+  {
+   "title": "Two-storey home",
+   "slug": "two-storey-home",
+   "subtitle": "Electrical plans and load calculations",
+   "location": "United States",
+   "categories": [
+    "mep"
+   ],
+   "facts": [
+    {
+     "label": "LOCATION",
+     "value": "United States"
+    },
+    {
+     "label": "SHEETS",
+     "value": "E101, E102"
+    }
+   ],
+   "media": [
+    {
+     "title": "Electrical",
+     "kind": "sheet",
+     "image": "mep_lakeview_E101.jpg",
+     "alt": "Sheet E101, electrical plans and load calculations",
+     "sheet_no": "E101",
+     "in_gallery": true,
+     "in_pile": false
+    }
+   ],
+   "order": 15,
+   "show_on_home": false
+  },
+  {
+   "title": "Telecom steel structures",
+   "slug": "telecom-steel-structures",
+   "subtitle": "Towers, monopoles and antenna mounts",
+   "location": "",
+   "categories": [
+    "structures"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Steel member design, bolted connections, foundations"
+    },
+    {
+     "label": "CODES",
+     "value": "TIA-222, AISC 360, ACI 318"
+    }
+   ],
+   "media": [
+    {
+     "title": "Arrangement",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the telecom structure general arrangement sheet",
+     "placeholder_glyph": "tower",
+     "sheet_no": "S101",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Connections",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the connection details sheet",
+     "placeholder_glyph": "plate",
+     "sheet_no": "S201",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Foundation",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the foundation sheet",
+     "placeholder_glyph": "footing",
+     "sheet_no": "S301",
+     "in_gallery": true,
+     "in_pile": true
+    }
+   ],
+   "order": 16,
+   "show_on_home": true
+  },
+  {
+   "title": "Solar panel stands",
+   "slug": "solar-panel-stands",
+   "subtitle": "Ground and roof mounts for PV arrays",
+   "location": "",
+   "categories": [
+    "structures"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Frame design, wind and snow loads, footings"
+    },
+    {
+     "label": "CODES",
+     "value": "ASCE 7, AISC 360, ACI 318"
+    }
+   ],
+   "media": [
+    {
+     "title": "Array layout",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the solar array layout sheet",
+     "placeholder_glyph": "array",
+     "sheet_no": "S101",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Frame",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the solar frame section sheet",
+     "placeholder_glyph": "frame",
+     "sheet_no": "S201",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Footings",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the solar stand footings sheet",
+     "placeholder_glyph": "pier",
+     "sheet_no": "S301",
+     "in_gallery": true,
+     "in_pile": true
+    }
+   ],
+   "order": 17,
+   "show_on_home": true
+  },
+  {
+   "title": "Container homes",
+   "slug": "container-homes",
+   "subtitle": "Homes built from shipping containers",
+   "location": "",
+   "categories": [
+    "modular-homes"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Modular design, permit drawings"
+    }
+   ],
+   "media": [
+    {
+     "title": "Elevations",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the container home elevations sheet",
+     "placeholder_glyph": "container",
+     "sheet_no": "A201",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Floor plan",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the container home floor plan sheet",
+     "placeholder_glyph": "plan",
+     "sheet_no": "A101",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Section",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the container home section sheet",
+     "placeholder_glyph": "section",
+     "sheet_no": "A301",
+     "in_gallery": true,
+     "in_pile": true
+    }
+   ],
+   "order": 18,
+   "show_on_home": true
+  },
+  {
+   "title": "Floating house",
+   "slug": "floating-house",
+   "subtitle": "Modular home on a floating platform",
+   "location": "",
+   "categories": [
+    "modular-homes"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Modular design, permit drawings"
+    }
+   ],
+   "media": [
+    {
+     "title": "Elevations",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the floating house elevations sheet",
+     "placeholder_glyph": "float",
+     "sheet_no": "A201",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Floor plan",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the floating house floor plan sheet",
+     "placeholder_glyph": "plan",
+     "sheet_no": "A101",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Section",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the floating house section sheet",
+     "placeholder_glyph": "section",
+     "sheet_no": "A301",
+     "in_gallery": true,
+     "in_pile": true
+    }
+   ],
+   "order": 19,
+   "show_on_home": true
+  },
+  {
+   "title": "Green house",
+   "slug": "green-house",
+   "subtitle": "Modular home design",
+   "location": "",
+   "categories": [
+    "modular-homes"
+   ],
+   "facts": [
+    {
+     "label": "SCOPE",
+     "value": "Modular design, permit drawings"
+    }
+   ],
+   "media": [
+    {
+     "title": "Elevations",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the green house elevations sheet",
+     "placeholder_glyph": "glass",
+     "sheet_no": "A201",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Floor plan",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the green house floor plan sheet",
+     "placeholder_glyph": "plan",
+     "sheet_no": "A101",
+     "in_gallery": true,
+     "in_pile": true
+    },
+    {
+     "title": "Section",
+     "kind": "sheet",
+     "image": null,
+     "alt": "Placeholder for the green house section sheet",
+     "placeholder_glyph": "section",
+     "sheet_no": "A301",
+     "in_gallery": true,
+     "in_pile": true
+    }
+   ],
+   "order": 20,
+   "show_on_home": true
+  }
+ ],
+ "partners": [
+  {
+   "name": "Will Teal Enterprises",
+   "order": 1
+  },
+  {
+   "name": "Nexus Engineering",
+   "order": 2
+  },
+  {
+   "name": "Excellenceengd",
+   "order": 3
+  },
+  {
+   "name": "Designs by Cortez",
+   "order": 4
+  },
+  {
+   "name": "Storm Fitness",
+   "order": 5
+  },
+  {
+   "name": "Will Black",
+   "order": 6
+  },
+  {
+   "name": "September Properties LLC",
+   "order": 7
+  },
+  {
+   "name": "KMW Properties",
+   "order": 8
+  }
+ ],
+ "settings": {
+  "fiverr_url": "https://www.fiverr.com/saifulhaq_kkk",
+  "rating_value": "4.9",
+  "rating_count": 370,
+  "rating_source": "Fiverr"
+ }
+}

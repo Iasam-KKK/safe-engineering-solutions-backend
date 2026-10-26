@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+media/
+private_media/
+staticfiles/
+test_media_tmp/
+seed/design_raw.json
+drive_mirror/
+*-key.json

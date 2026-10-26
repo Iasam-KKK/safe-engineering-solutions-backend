@@ -1,0 +1,19 @@
+[project]
+name = "safe-backend"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.1,<6.2",
+    "django-cors-headers>=4.9",
+    "django-environ>=0.14",
+    "djangorestframework>=3.18",
+    "google-auth>=2.62",
+    "gunicorn>=26",
+    "imageio-ffmpeg>=0.6",
+    "pillow>=13",
+    "psycopg[binary]>=3.3",
+    "pymupdf>=1.26,<2",
+    "requests>=2.34",
+    "whitenoise>=6.12",
+]
