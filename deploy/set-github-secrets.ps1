@@ -47,7 +47,16 @@ function Invoke-Native([string]$Exe, [string[]]$Arguments, [string]$InputText = 
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.RedirectStandardInput = $true
-    $p = [System.Diagnostics.Process]::Start($psi)
+    # On a UTF-8 console, .NET opens the program's input with the console's encoding and writes a
+    # byte-order mark into it at once; that invisible mark would become the start of the secret.
+    # So the program starts while the console encoding is UTF-8 without a mark.
+    $saved = [Console]::InputEncoding
+    try {
+        [Console]::InputEncoding = New-Object System.Text.UTF8Encoding $false
+        $p = [System.Diagnostics.Process]::Start($psi)
+    } finally {
+        [Console]::InputEncoding = $saved
+    }
     if ($null -ne $InputText) { $p.StandardInput.Write($InputText) }
     $p.StandardInput.Close()
     $errTask = $p.StandardError.ReadToEndAsync()
@@ -153,7 +162,8 @@ $values = [ordered]@{
 foreach ($repo in $Repos) {
     $full = "$Owner/$repo"
     foreach ($name in $values.Keys) {
-        $r = Invoke-Native $gh @("secret", "set", $name, "--app", "actions", "--repo", $full) $values[$name]
+        $value = $values[$name].TrimStart([char]0xFEFF)
+        $r = Invoke-Native $gh @("secret", "set", $name, "--app", "actions", "--repo", $full) $value
         if ($r.Code -ne 0) { Stop-With "Setting secret $name in $full failed: $($r.Err.Trim())" }
     }
     $r = Invoke-Native $gh @("variable", "set", "SAFE_DOMAIN", "--repo", $full, "--body", $Domain)

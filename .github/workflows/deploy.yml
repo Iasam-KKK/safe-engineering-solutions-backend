@@ -87,24 +87,29 @@ jobs:
           [ -z "$DOMAIN_AS_SECRET" ] || [ -n "$SAFE_DOMAIN" ] || fail "SAFE_DOMAIN is saved as a secret; it must be a variable ($WHERE, Variables tab)."
           [ -z "$missing" ] || fail "Missing$missing $WHERE. Secrets: DEPLOY_HOST, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS. Variable: SAFE_DOMAIN. The other SAFE repo needs the same four."
 
-          # Pasted values can carry Windows line endings, spaces, a scheme or a user name.
-          HOST=$(printf '%s' "$DEPLOY_HOST" | tr -d '[:space:]')
+          # Pasted values can carry Windows line endings, spaces, a scheme or a user name, and Windows
+          # tools can put an invisible byte-order mark in front.
+          nobom() { sed '1s/^\xEF\xBB\xBF//'; }
+          HOST=$(printf '%s' "$DEPLOY_HOST" | nobom | tr -d '[:space:]')
           HOST=${HOST#*://}; HOST=${HOST%%/*}; HOST=${HOST#*@}
-          if ! printf '%s' "$HOST" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
+          if printf '%s' "$HOST" | grep -q '[A-Za-z]'; then
             fail "DEPLOY_HOST must be the server's IPv4 address (four numbers with dots), not a domain name: the domain goes through Cloudflare's proxy, which doesn't carry SSH."
           fi
-          DOMAIN=$(printf '%s' "$SAFE_DOMAIN" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+          if ! printf '%s' "$HOST" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
+            fail "DEPLOY_HOST must be just the server's IPv4 address (four numbers with dots); it has other characters too, perhaps invisible ones. Set it again with deploy/set-github-secrets.ps1."
+          fi
+          DOMAIN=$(printf '%s' "$SAFE_DOMAIN" | nobom | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
           case $DOMAIN in
             *://*|*/*|www.*|api.*) fail "SAFE_DOMAIN must be the bare domain, like example.com: no https://, www., api. or slash. It is: $DOMAIN" ;;
           esac
           printf '%s' "$DOMAIN" | grep -Eq '^[a-z0-9-]+(\.[a-z0-9-]+)+$' || fail "SAFE_DOMAIN \"$DOMAIN\" isn't a domain name."
 
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_SSH_KEY" | nobom | tr -d '\r' > ~/.ssh/deploy
           chmod 600 ~/.ssh/deploy
           grep -q 'PRIVATE KEY-----' ~/.ssh/deploy || fail "DEPLOY_SSH_KEY isn't a private key. It is the whole file safe_deploy (not safe_deploy.pub), from -----BEGIN to -----END."
           ssh-keygen -y -f ~/.ssh/deploy < /dev/null > /dev/null 2>&1 || fail "DEPLOY_SSH_KEY can't be read: cut short, or protected by a passphrase. Make it again with deploy/set-github-secrets.ps1."
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | nobom | tr -d '\r' > ~/.ssh/known_hosts
           ssh-keygen -F "$HOST" -f ~/.ssh/known_hosts > /dev/null || fail "DEPLOY_KNOWN_HOSTS has no line for the address in DEPLOY_HOST. Make it again with deploy/set-github-secrets.ps1."
 
           echo "DEPLOY_IP=$HOST" >> "$GITHUB_ENV"
