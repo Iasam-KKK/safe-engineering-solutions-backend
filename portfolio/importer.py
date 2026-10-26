@@ -11,11 +11,13 @@ Folder layout (category folders are optional and only for the team's own order):
           3 Before photos/        existing photos/drawings, matched to a sheet or render by number or name
           4 Videos/               walkthroughs / animations (mp4, mov, ...)
           5 Site photos/          photos of the job on site or finished
+          6 3D model/             a .glb exported from Revit: shown first, visitors turn and zoom it
           sheets.csv              optional per-file overrides: file,page,sheet_no,title,alt,in_pile,in_gallery,skip
 
-Subfolders are recognised by a word in their name (sheet, render, before, video, photo); files
-dropped straight into the project folder are sorted by type (PDF = sheets, video = videos,
-"A101 ..." images = sheets, "before ..." images = before, other images = renders).
+Subfolders are recognised by a word in their name (sheet, render, before, video, photo, 3d / model);
+files dropped straight into the project folder are sorted by type (PDF = sheets, video = videos,
+.glb = 3D model, "A101 ..." images = sheets, "before ..." images = before, other images = renders).
+A .glb is picked up from any of the project's folders.
 
 Re-running is safe: each sheet/render/video remembers the file (and page) it came from,
 so it is skipped (or refreshed with --refresh) instead of being added twice.
@@ -27,6 +29,7 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
@@ -70,10 +73,10 @@ YES = {"yes", "y", "true", "1", "x"}
 
 @dataclass
 class Item:
-    """One thing to import: a sheet (maybe one page of a PDF), a render, a video or a 'before' image."""
+    """One thing to import: a sheet (maybe one page of a PDF), a render, a video, a 3D model or a 'before' image."""
 
     path: Path
-    role: str              # sheet | render | video | before
+    role: str              # sheet | render | video | model | before
     key: str               # stable source key, e.g. "garage/sheets/set.pdf#p3"
     page: int = 0          # PDF page, 1-based (0 = not a PDF)
     sheet_no: str = ""
@@ -131,7 +134,7 @@ def _overrides(folder: Path) -> dict[tuple[str, int], dict]:
 
 
 ROLE_WORDS = [("before", "before"), ("sheet", "sheet"), ("drawing", "sheet"), ("render", "render"),
-              ("video", "video"), ("photo", "photo")]
+              ("video", "video"), ("photo", "photo"), ("3d", "model"), ("model", "model")]
 
 
 def _role_of_dir(name: str) -> str | None:
@@ -146,6 +149,8 @@ def _loose_role(p: Path) -> str | None:
         return "sheet"
     if ext in mt.VIDEO_EXT:
         return "video"
+    if ext in mt.MODEL_EXT:
+        return "model"
     if ext in mt.IMAGE_EXT:
         if p.stem.lower().startswith("before"):
             return "before"
@@ -171,7 +176,7 @@ def unzip(zp: Path, base: Path) -> list[tuple[Path, str]]:
 
     st = zp.stat()
     dest = base / UNZIP_DIR / f"{slugify(zp.stem)[:50] or 'zip'}-{st.st_size}-{int(st.st_mtime)}"
-    keep = mt.IMAGE_EXT | mt.VIDEO_EXT | mt.PDF_EXT
+    keep = mt.IMAGE_EXT | mt.VIDEO_EXT | mt.PDF_EXT | mt.MODEL_EXT
     with zipfile.ZipFile(zp) as zf:
         members = [
             m for m in zf.infolist()
@@ -224,10 +229,10 @@ def _number_repeats(items: list) -> None:
     """Pictures that tidy to the same title get numbers: Front 1, Front 2..."""
     from collections import Counter
 
-    counts = Counter(it.title for it in items if it.role in ("render", "video") and not it.sheet_no and it.title)
+    counts = Counter(it.title for it in items if it.role in ("render", "video", "model") and not it.sheet_no and it.title)
     seen: Counter = Counter()
     for it in items:
-        if it.role in ("render", "video") and not it.sheet_no and counts.get(it.title, 0) > 1:
+        if it.role in ("render", "video", "model") and not it.sheet_no and counts.get(it.title, 0) > 1:
             seen[it.title] += 1
             it.title = f"{it.title} {seen[it.title]}"
 
@@ -235,6 +240,8 @@ def _number_repeats(items: list) -> None:
 def _zip_role(inner: str, path: Path, default: str | None) -> str | None:
     """Role of a file from a ZIP: a role folder inside the ZIP wins, then the folder the ZIP sits in
     (by file type: a video in a renders ZIP is still a video), then the loose-file rules."""
+    if path.suffix.lower() in mt.MODEL_EXT:
+        return "model"  # a .glb is a 3D model whatever folder it sits in
     for part in reversed(Path(inner).parts[:-1]):  # the folder closest to the file wins
         role = _role_of_dir(part)
         if role:
@@ -251,13 +258,13 @@ def _zip_role(inner: str, path: Path, default: str | None) -> str | None:
 
 def collect(folder: Path, base: Path, report: "Report | None" = None) -> list[Item]:
     """Everything importable in one project folder, in display order:
-    sheets, renders, site photos, videos (then 'before' images, which pair with the others).
+    3D models, sheets, renders, site photos, videos (then 'before' images, which pair with the others).
     ZIP files are opened and their contents treated as if they were in the folder."""
     keys: dict[Path, str] = {}
     rel = lambda p: keys.get(p) or p.relative_to(base).as_posix()  # noqa: E731
-    found: dict[str, list[Path]] = {"sheet": [], "render": [], "photo": [], "video": [], "before": []}
+    found: dict[str, list[Path]] = {"model": [], "sheet": [], "render": [], "photo": [], "video": [], "before": []}
     exts = {"sheet": mt.PDF_EXT | mt.IMAGE_EXT, "render": mt.IMAGE_EXT, "photo": mt.IMAGE_EXT,
-            "video": mt.VIDEO_EXT, "before": mt.IMAGE_EXT}
+            "video": mt.VIDEO_EXT, "before": mt.IMAGE_EXT, "model": set()}
 
     def add_zip(zp: Path, default: str | None):
         try:
@@ -274,10 +281,12 @@ def collect(folder: Path, base: Path, report: "Report | None" = None) -> list[It
 
     for sub in sorted((d for d in folder.iterdir() if d.is_dir()), key=lambda d: d.name.lower()):
         role = _role_of_dir(sub.name)
+        # a .glb is a 3D model in whatever folder it sits ("3D model", "Renders", "Revit export"...)
+        found["model"] += _files(sub, mt.MODEL_EXT)
         if role:
             found[role] += _files(sub, exts[role])
             for zp in _files(sub, {".zip"}):
-                add_zip(zp, role)
+                add_zip(zp, None if role == "model" else role)
     for p in sorted((f for f in folder.iterdir() if f.is_file()), key=lambda f: f.name.lower()):
         if p.suffix.lower() == ".zip":
             add_zip(p, None)
@@ -287,10 +296,14 @@ def collect(folder: Path, base: Path, report: "Report | None" = None) -> list[It
             found[role].append(p)
 
     items: list[Item] = []
-    for role in ("sheet", "render", "photo", "video", "before"):
+    for role in ("model", "sheet", "render", "photo", "video", "before"):
         for p in found[role]:
             if role == "sheet" and p.suffix.lower() in mt.PDF_EXT:
                 items.append(Item(p, "sheet", rel(p)))  # expanded into pages later
+                continue
+            if role == "model":
+                # export names ("j1065 floating house R3") mean nothing to visitors
+                items.append(Item(p, "model", rel(p), title="3D model", in_pile=False))
                 continue
             stem = p.stem
             if role == "before" and stem.lower().startswith("before"):
@@ -370,12 +383,14 @@ def _default_title(it: Item) -> str:
         return it.title[:80]
     if it.role == "sheet":
         return f"Sheet {it.sheet_no}" if it.sheet_no else f"Sheet {it.page or 1}"
-    return {"render": "Render", "video": "Walkthrough"}.get(it.role, "View")
+    return {"render": "Render", "video": "Walkthrough", "model": "3D model"}.get(it.role, "View")
 
 
 def _default_alt(it: Item, project: Project, title: str) -> str:
     if it.alt:
         return it.alt[:200]
+    if it.role == "model":
+        return f"3D model of {project.title} that you can turn and zoom"[:200]
     what = {"sheet": "Drawing sheet", "render": "Render", "video": "Video"}.get(it.role, "Image")
     no = f" {it.sheet_no}" if it.sheet_no and it.role == "sheet" else ""
     return f"{what}{no}, {title.lower()}, {project.title}"[:200]
@@ -398,9 +413,24 @@ def _store_video(media: ProjectMedia, src: Path, transcode: bool):
     media.image.save(slugify(src.stem)[:80] + "-poster.jpg", ContentFile(poster), save=False)
 
 
+def _store_model(media: ProjectMedia, src: Path, report: Report, label: str):
+    """Copy the .glb as it is (compressing it is the exporter's job). Its poster, if the admin
+    picked one, stays."""
+    if not mt.is_glb(src):
+        raise ValueError("not a binary glTF file (export it from Revit as .glb, not .gltf)")
+    size = src.stat().st_size
+    if size > mt.MODEL_WARN_BYTES:
+        report.warn(f"{label}: 3D model {src.name} is {size // 1024**2} MB, slow on phones; "
+                    "compress it (gltf-transform optimize ... --compress draco) and upload it again")
+    if media.model:  # re-processing: don't leave the old file behind
+        media.model.delete(save=False)
+    with src.open("rb") as fh:
+        media.model.save((slugify(src.stem)[:80] or "model") + ".glb", File(fh), save=False)
+
+
 def ingest(project: Project, items: list[Item], *, refresh=False, transcode_videos=True, report: Report, label: str) -> dict:
     """Create (or refresh) ProjectMedia rows for the items. Returns counts."""
-    counts = {"sheet": 0, "render": 0, "video": 0, "pairs": 0, "skipped": 0}
+    counts = {"sheet": 0, "render": 0, "video": 0, "model": 0, "pairs": 0, "skipped": 0}
     existing = {m.source: m for m in project.media.exclude(source="")}
     next_order = max([m.order for m in project.media.all()] or [0]) + 1
     pile_used = sum(1 for m in project.media.all() if m.in_pile)
@@ -417,7 +447,8 @@ def ingest(project: Project, items: list[Item], *, refresh=False, transcode_vide
         if m is None:
             m = ProjectMedia(project=project, order=next_order, source=it.key)
             next_order += 1
-        m.kind = {"sheet": ProjectMedia.Kind.SHEET, "render": ProjectMedia.Kind.RENDER, "video": ProjectMedia.Kind.VIDEO}[it.role]
+        m.kind = {"sheet": ProjectMedia.Kind.SHEET, "render": ProjectMedia.Kind.RENDER, "video": ProjectMedia.Kind.VIDEO,
+                  "model": ProjectMedia.Kind.MODEL}[it.role]
         m.sheet_no = it.sheet_no[:12]
         m.title = title
         m.alt = _default_alt(it, project, title)
@@ -425,9 +456,16 @@ def ingest(project: Project, items: list[Item], *, refresh=False, transcode_vide
         if it.in_pile is not None:
             m.in_pile = it.in_pile
         elif m.pk is None:
-            m.in_pile = it.role != "video" and pile_used < PILE_MAX
+            m.in_pile = it.role not in ("video", "model") and pile_used < PILE_MAX
             pile_used += m.in_pile
-        if it.role == "video":
+        if it.role == "model":
+            m.in_pile = False
+            try:
+                _store_model(m, it.path, report, label)
+            except Exception as exc:
+                report.warn(f"{label}: 3D model {it.path.name} failed: {exc}")
+                continue
+        elif it.role == "video":
             m.in_pile = False
             try:
                 _store_video(m, it.path, transcode_videos)
@@ -654,8 +692,8 @@ def discover(root: Path, report: Report) -> list[dict]:
         for f in sorted(x for x in d.iterdir() if x.is_file()):
             if f.suffix.lower() in mt.PDF_EXT:
                 add(f, cat, group)
-            elif f.suffix.lower() in mt.IMAGE_EXT | mt.VIDEO_EXT:
-                report.warn(f"{f.relative_to(root)}: pictures and videos need a project folder; this file was skipped")
+            elif f.suffix.lower() in mt.IMAGE_EXT | mt.VIDEO_EXT | mt.MODEL_EXT:
+                report.warn(f"{f.relative_to(root)}: pictures, videos and 3D models need a project folder; this file was skipped")
         for sub in sorted(x for x in d.iterdir() if x.is_dir() and not x.name.startswith(("_", "."))):
             if _is_project_dir(sub):
                 add(sub, cat, group)
@@ -785,13 +823,13 @@ def run_import(root: Path, *, dry_run=False, publish=False, update=False, refres
             items = expand_pdfs(items, redact_text, boxes, render=not dry_run, report=report, label=label,
                                 auto_hide=auto_hide)
             items = apply_overrides(items, folder)
-            n = {k: sum(1 for i in items if i.role == k) for k in ("sheet", "render", "video", "before")}
+            n = {k: sum(1 for i in items if i.role == k) for k in ("sheet", "render", "video", "model", "before")}
             nos = [i.sheet_no for i in items if i.role == "sheet" and i.sheet_no]
             missing_no = sum(1 for i in items if i.role == "sheet" and not i.sheet_no)
             exists = Project.objects.filter(slug=slug).first()
             out(
                 f"{'UPDATE' if exists else 'NEW   '} {label} ({slug}): {n['sheet']} sheets, {n['render']} renders, "
-                f"{n['video']} videos, {n['before']} before images"
+                f"{n['video']} videos, {n['model']} 3D models, {n['before']} before images"
                 + (f"\n         sheet numbers: {', '.join(nos)}" if nos else "")
                 + (f"\n         {missing_no} sheets without a readable number (add them in sheets.csv or the admin)" if missing_no else "")
             )
@@ -821,12 +859,12 @@ def run_import(root: Path, *, dry_run=False, publish=False, update=False, refres
                     gone, _ = p.media.filter(image="").exclude(placeholder_glyph="").delete()
                     if gone:
                         report.say(f"{label}: {gone} placeholder sheet(s) replaced by the real ones")
-                # renders that arrive after the PDF still lead: pairs, renders, videos, then sheets
-                if any(counts[k] for k in ("sheet", "render", "video", "pairs")):
+                # renders that arrive after the PDF still lead: 3D models, pairs, renders, videos, then sheets
+                if any(counts[k] for k in ("sheet", "render", "video", "model", "pairs")):
                     p.reorder_media()
             report.say(
                 f"{label}: {counts['sheet']} sheets, {counts['render']} renders, {counts['video']} videos, "
-                f"{counts['pairs']} before/after pairs added"
+                f"{counts['model']} 3D models, {counts['pairs']} before/after pairs added"
                 + (f", {counts['skipped']} already there" if counts["skipped"] else "")
                 + ("" if p.is_published else "  [draft: tick Published in the admin after checking]")
             )
@@ -835,7 +873,8 @@ def run_import(root: Path, *, dry_run=False, publish=False, update=False, refres
 
 # ---------- admin upload box ----------
 def ingest_uploads(project: Project, uploads: list[UploadedFile], as_kind: str, report: Report) -> dict:
-    """Files dropped into a project's admin page: PDFs become sheets, images sheets/renders, videos videos."""
+    """Files dropped into a project's admin page: PDFs become sheets, images sheets/renders, videos videos,
+    .glb files 3D models."""
     with tempfile.TemporaryDirectory() as tmp, batched():
         base = Path(tmp)
         items = []
@@ -851,11 +890,13 @@ def ingest_uploads(project: Project, uploads: list[UploadedFile], as_kind: str, 
                 items.append(Item(path, "sheet", key))
             elif ext in mt.VIDEO_EXT:
                 items.append(Item(path, "video", key, sheet_no=no, title=title, in_pile=False))
+            elif ext in mt.MODEL_EXT:
+                items.append(Item(path, "model", key, title="3D model", in_pile=False))
             elif ext in mt.IMAGE_EXT:
                 role = as_kind if as_kind in {"sheet", "render", "before"} else ("sheet" if no and not no.startswith("R") else "render")
                 items.append(Item(path, role, key, sheet_no=no, title=title))
             else:
-                report.warn(f"{up.name}: not a PDF, image or video, skipped")
+                report.warn(f"{up.name}: not a PDF, image, video or .glb 3D model, skipped")
         items = expand_pdfs(items, [], [], render=True, report=report, label=project.title)
         # admin uploads are already web-sized videos most of the time; only odd formats get converted
         counts = ingest(project, items, refresh=True, transcode_videos=False, report=report, label=project.title)

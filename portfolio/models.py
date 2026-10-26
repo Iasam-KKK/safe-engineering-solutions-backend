@@ -118,12 +118,14 @@ class Project(models.Model):
         ) or (media[0] if media else None)
 
     def reorder_media(self) -> bool:
-        """Put the strongest views first: before/after pairs, renders and photos, videos, then sheets
-        (placeholders last). The order within each group is kept, so admin tweaks there survive.
+        """Put the strongest views first: 3D models, before/after pairs, renders and photos, videos, then
+        sheets (placeholders last). The order within each group is kept, so admin tweaks there survive.
         Called by the importer whenever it adds files, so renders that arrive after the PDF still lead."""
         from config.revalidate import revalidate
 
         def group(m):
+            if m.kind == ProjectMedia.Kind.MODEL:
+                return -1  # the interactive model opens first
             if not m.image and not m.video:
                 return 9  # placeholder sketch waiting for the real sheet
             if m.kind == ProjectMedia.Kind.RENDER:
@@ -140,7 +142,7 @@ class Project(models.Model):
             folders = m.source.split("!/")[0].lower().split("/")[:-1]
             return any("photo" in f and "before" not in f for f in folders)
 
-        imported = [m for m in items if m.source and m.image and m.kind != ProjectMedia.Kind.VIDEO and not site_photo(m)]
+        imported = [m for m in items if m.source and m.image and m.kind not in NOT_IN_PILE and not site_photo(m)]
         if imported:
             for k, m in enumerate(imported):
                 if m.in_pile != (k < self.PILE_SIZE):
@@ -174,17 +176,19 @@ def media_upload_to(instance, filename):
 
 
 class ProjectMedia(models.Model):
-    """One drawing sheet, render, photo or video of a project.
+    """One drawing sheet, render, photo, video or 3D model of a project.
 
     Fill "Before image" to turn it into a before/after pair with a drag slider.
     Leave "Image" empty to show a drawn placeholder until the real sheet arrives.
     For a video, "Image" is its poster (made from the video when left empty).
+    For a 3D model, "Image" is optional: the picture on its thumbnail and while it loads.
     """
 
     class Kind(models.TextChoices):
         SHEET = "sheet", "Drawing sheet (white paper, shown whole)"
         RENDER = "render", "Render or photo (fills the frame)"
         VIDEO = "video", "Video (walkthrough or animation)"
+        MODEL = "model", "3D model (.glb: visitors turn and zoom it)"
 
     class Glyph(models.TextChoices):
         PLAN = "plan", "Floor plan"
@@ -226,6 +230,16 @@ class ProjectMedia(models.Model):
         choices=Glyph,
         blank=True,
         help_text="Only used while Image is empty: the sketch drawn on the placeholder sheet",
+    )
+    model = models.FileField(
+        "3D model",
+        upload_to=media_upload_to,
+        blank=True,
+        validators=[FileExtensionValidator(["glb"])],
+        help_text=(
+            "3D models only: a .glb file exported from Revit (shapes and materials, no Revit data), "
+            "ideally under 20 MB. Image is optional: the picture shown while it loads."
+        ),
     )
 
     # before / after pair
@@ -301,6 +315,11 @@ class ProjectMedia(models.Model):
         return bool(self.before_image)
 
     def clean(self):
+        if self.kind == self.Kind.MODEL:
+            if not self.model:
+                raise ValidationError({"model": "Upload the 3D model (.glb)."})
+            self.in_pile = False  # the homepage pile shows pictures only
+            return
         if self.kind == self.Kind.VIDEO:
             if not self.video:
                 raise ValidationError({"video": "Upload the video file (MP4)."})
@@ -329,3 +348,7 @@ class DriveImport(models.Model):
     def __str__(self):
         when = f"{self.created_at:%Y-%m-%d %H:%M}" if self.created_at else "new"
         return f"{when} ({'failed' if self.failed else 'loaded'})"
+
+
+# kinds kept out of the homepage drawing pile (it shows pictures only)
+NOT_IN_PILE = (ProjectMedia.Kind.VIDEO, ProjectMedia.Kind.MODEL)

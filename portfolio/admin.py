@@ -11,7 +11,7 @@ class MultipleFileInput(forms.ClearableFileInput):
 
 class MultipleFileField(forms.FileField):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput(attrs={"accept": ".pdf,.jpg,.jpeg,.png,.webp,.tif,.tiff,.mp4,.mov,.m4v,.webm"}))
+        kwargs.setdefault("widget", MultipleFileInput(attrs={"accept": ".pdf,.jpg,.jpeg,.png,.webp,.tif,.tiff,.mp4,.mov,.m4v,.webm,.glb"}))
         super().__init__(*args, **kwargs)
 
     def clean(self, data, initial=None):
@@ -28,7 +28,8 @@ class ProjectForm(forms.ModelForm):
         help_text=(
             "Pick several at once. PDFs: every page becomes a sheet (sheet numbers read from the title block). "
             "Images named like \"A101 Floor plan.jpg\" become sheets, others renders. MP4 videos become videos "
-            "with a poster. Check every new sheet for names, addresses and stamps before publishing."
+            "with a poster. A .glb file (3D model exported from Revit) becomes a 3D view that visitors can turn and "
+            "zoom, shown first. Check every new sheet for names, addresses and stamps before publishing."
         ),
     )
     add_as = forms.ChoiceField(
@@ -99,7 +100,7 @@ class MediaInline(admin.StackedInline):
     readonly_fields = ["preview", "before_preview", "source"]
     fieldsets = [
         (None, {"fields": [("order", "kind"), ("sheet_no", "title"), ("image", "preview"), "alt", "placeholder_glyph",
-                           "video", ("in_gallery", "in_pile"), "source"]}),
+                           "video", "model", ("in_gallery", "in_pile"), "source"]}),
         ("Before / after pair (optional)", {
             "classes": ["collapse"],
             "fields": [("before_image", "before_preview"), "before_alt", ("before_label", "after_label"), "before_missing_note"],
@@ -129,7 +130,7 @@ class ProjectAdmin(admin.ModelAdmin):
     save_on_top = True
     fieldsets = [
         (None, {"fields": ["title", "slug", "categories", "subtitle", "location", "description"]}),
-        ("Add sheets, renders and videos", {"fields": ["add_files", "add_as"]}),
+        ("Add sheets, renders, videos and 3D models", {"fields": ["add_files", "add_as"]}),
         ("Where it shows", {"fields": [("is_published", "show_on_home", "order"), "cover"]}),
         ("Running / built strip on the homepage", {
             "classes": ["collapse"],
@@ -143,6 +144,12 @@ class ProjectAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
+        # a 3D model added or changed by hand in the rows below moves to the front, like an imported one
+        if any(
+            f.instance.pk and f.instance.kind == ProjectMedia.Kind.MODEL and f.has_changed()
+            for fs in formsets if fs.model is ProjectMedia for f in fs.forms
+        ):
+            form.instance.reorder_media()
         files = form.cleaned_data.get("add_files") or []
         if not files:
             return
@@ -153,6 +160,7 @@ class ProjectAdmin(admin.ModelAdmin):
         self.message_user(
             request,
             f"Added {counts['sheet']} sheets, {counts['render']} renders, {counts['video']} videos, "
+            f"{counts['model']} 3D models, "
             f"{counts['pairs']} before/after pairs. Check each new sheet for names, addresses and stamps.",
             messages.SUCCESS,
         )

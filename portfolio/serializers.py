@@ -18,13 +18,20 @@ class MediaSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     before = serializers.SerializerMethodField()
     video = serializers.SerializerMethodField()
+    model = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectMedia
         fields = [
             "id", "kind", "sheet_no", "title", "alt", "image", "placeholder_glyph",
-            "before", "after_label", "video", "in_gallery", "in_pile",
+            "before", "after_label", "video", "model", "in_gallery", "in_pile",
         ]
+
+    def get_model(self, m):
+        """3D models: the .glb file to turn and zoom; `image` (optional) is its poster."""
+        if m.kind != ProjectMedia.Kind.MODEL or not m.model:
+            return None
+        return {"url": file_url(self.context.get("request"), m.model)}
 
     def get_image(self, m):
         return image_obj(self.context.get("request"), m.image, m.width, m.height)
@@ -61,11 +68,12 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
     cover = serializers.SerializerMethodField()
     media_count = serializers.SerializerMethodField()
     media_kind = serializers.SerializerMethodField()
+    has_model = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = [
-            "slug", "title", "subtitle", "location", "categories", "cover", "media_count", "media_kind",
+            "slug", "title", "subtitle", "location", "categories", "cover", "media_count", "media_kind", "has_model",
             "show_on_home", "stage", "stage_label", "stage_date", "card_text", "updated_at",
         ]
 
@@ -87,6 +95,10 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
 
     def get_media_kind(self, p):
         return media_kind(self._gallery(p))
+
+    def get_has_model(self, p):
+        """True when the gallery has a 3D model: cards show a 3D tag."""
+        return any(m.kind == ProjectMedia.Kind.MODEL and m.model for m in self._gallery(p))
 
 
 class ProjectDetailSerializer(ProjectSummarySerializer):

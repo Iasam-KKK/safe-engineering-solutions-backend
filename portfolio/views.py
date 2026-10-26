@@ -3,7 +3,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Category, Project, ProjectMedia
+from .models import NOT_IN_PILE, Category, Project, ProjectMedia
 from .serializers import (
     CategorySerializer,
     MediaSerializer,
@@ -92,7 +92,7 @@ class Home(APIView):
             in_cat.sort(key=lambda p: not p.show_on_home)  # stable: keeps the admin order otherwise
             for p in in_cat:
                 # pictures, and placeholder sketches for sheets that haven't arrived yet
-                pictures = [m for m in p.media.all() if (m.image or m.placeholder_glyph) and m.kind != ProjectMedia.Kind.VIDEO]
+                pictures = [m for m in p.media.all() if (m.image or m.placeholder_glyph) and m.kind not in NOT_IN_PILE]
                 # the sheets picked for the pile, or else its first pictures (renders lead, see reorder_media)
                 pile = [m for m in pictures if m.in_pile] or pictures[:PILE_SIZE]
                 if not pile:

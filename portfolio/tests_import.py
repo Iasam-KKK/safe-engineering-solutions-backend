@@ -406,3 +406,64 @@ class TitleBlockTests(TestCase):
         self.assertEqual([p.sheet_no for p in pages], ["A100a", "MEP101", "S101"])
         self.assertEqual([p.title for p in pages], ["Architectural Drawings", "Electrical Plan Ffl", "Dock Floats"])
         self.assertEqual(found.get("auto: JOSEPH S. KARL."), 3)  # hidden on all three sheets
+
+
+def make_glb(path: Path):
+    """The smallest valid binary glTF: the 12-byte header and a JSON chunk naming the version."""
+    import json
+    import struct
+
+    body = json.dumps({"asset": {"version": "2.0"}}).encode()
+    body += b" " * (-len(body) % 4)
+    chunk = struct.pack("<II", len(body), 0x4E4F534A) + body
+    path.write_bytes(struct.pack("<4sII", b"glTF", 2, 12 + len(chunk)) + chunk)
+
+
+@override_settings(MEDIA_ROOT=MEDIA, REVALIDATE_SECRET="")
+class ModelImportTests(TestCase):
+    """A .glb exported from Revit becomes a 3D view, shown first and kept out of the homepage pile."""
+
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.root, True)
+
+    def test_glb_found_in_any_project_folder(self):
+        from portfolio.importer import collect
+
+        proj = self.root / "Floating house"
+        for sub in ("2 Renders", "6 3D model"):
+            (proj / sub).mkdir(parents=True)
+        Image.new("RGB", (40, 30), "white").save(proj / "2 Renders" / "R01 Front.jpg")
+        make_glb(proj / "6 3D model" / "j1065 floating house R3.glb")
+        Image.new("RGB", (40, 30), "white").save(proj / "6 3D model" / "notes.png")  # not a model: ignored
+        make_glb(proj / "2 Renders" / "massing.glb")
+        items = collect(proj, self.root)
+        models = [it for it in items if it.role == "model"]
+        self.assertEqual(len(models), 2)
+        self.assertEqual({it.title for it in models}, {"3D model 1", "3D model 2"})
+        self.assertEqual([it.role for it in items].count("render"), 1)
+
+    def test_uploaded_glb_opens_first(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from portfolio.importer import Report, ingest_uploads
+        from portfolio.models import ProjectMedia
+        from portfolio.serializers import MediaSerializer
+
+        make_glb(self.root / "house.glb")
+        Image.new("RGB", (40, 30), "white").save(self.root / "R01 Front.jpg")
+        (self.root / "fake.glb").write_text("not a model")
+        up = lambda f: SimpleUploadedFile(f.name, f.read_bytes())  # noqa: E731
+        p = Project.objects.create(title="Floating house", subtitle="x")
+        report = Report()
+        counts = ingest_uploads(p, [up(self.root / "R01 Front.jpg"), up(self.root / "house.glb"),
+                                    up(self.root / "fake.glb")], "auto", report)
+        self.assertEqual((counts["render"], counts["model"]), (1, 1))
+        self.assertTrue(any("fake.glb" in w for w in report.warnings), report.warnings)
+        first = p.media.order_by("order", "id").first()
+        self.assertEqual(first.kind, ProjectMedia.Kind.MODEL)
+        self.assertFalse(first.in_pile)
+        self.assertEqual(first.title, "3D model")
+        data = MediaSerializer(first).data
+        self.assertTrue(data["model"]["url"].endswith(".glb"))
+        self.assertIsNone(MediaSerializer(p.media.get(kind=ProjectMedia.Kind.RENDER)).data["model"])

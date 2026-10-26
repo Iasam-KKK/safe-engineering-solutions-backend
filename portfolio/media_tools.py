@@ -23,6 +23,9 @@ MAX_SIDE = 2400
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp"}
 VIDEO_EXT = {".mp4", ".mov", ".m4v", ".webm", ".avi", ".mkv", ".wmv"}
 PDF_EXT = {".pdf"}
+# 3D models: binary glTF, exported from Revit (geometry and materials only, no BIM data)
+MODEL_EXT = {".glb"}
+MODEL_WARN_BYTES = 30 * 1024**2  # bigger than this is slow on a phone: compress it first
 
 # Sheet numbers like A101, A-101, S201, E1.01, FP101, M-101.1
 SHEET_NO = re.compile(r"^(?:[A-Z]{1,4})-?\d{1,4}(?:\.\d{1,2})?[a-z]?$")
@@ -437,3 +440,9 @@ def split_name(stem: str) -> tuple[str, str]:
         title = (m.group("title") or "").strip()
         return m.group("no").upper(), title[:1].upper() + title[1:] if title else ""
     return "", stem[:1].upper() + stem[1:]
+
+
+def is_glb(path: Path) -> bool:
+    """A binary glTF starts with the magic bytes "glTF" (anything else renamed .glb is refused)."""
+    with Path(path).open("rb") as fh:
+        return fh.read(4) == b"glTF"
