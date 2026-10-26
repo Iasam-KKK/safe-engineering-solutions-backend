@@ -137,7 +137,7 @@ Until now `<domain>` and `www` still show the old site. To switch:
 1. In Cloudflare, point `@` and `www` at the server instead:
    - Replace the old host's records with one A record each, to the server's IPv4.
    - Set both to **Proxied**.
-2. Run the bootstrap again: `sudo bash safe-deploy/bootstrap.sh <domain> "<public key>"`. It adds both names to the certificate and enables the site.
+2. Wait 5 minutes after the **last** of those changes; the old records stay in caches that long, Let's Encrypt's included. Then run the bootstrap again: `sudo bash safe-deploy/bootstrap.sh <domain> "<public key>"`. It adds both names to the certificate and enables the site. The site goes on only once both names are on the certificate.
 3. Turn on **Always Use HTTPS** in Cloudflare.
 
 Between steps 1 and 2, visitors may see a Cloudflare error page for a minute or two.
