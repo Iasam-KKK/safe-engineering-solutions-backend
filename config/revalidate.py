@@ -65,4 +65,6 @@ def revalidate(*tags):
     if not settings.REVALIDATE_SECRET or not tags:
         return
     tags = set(tags)
-    transaction.on_commit(lambda: threading.Thread(target=_post, args=(tags,), daemon=True).start())
+    # not a daemon thread: a short command (manage.py shell, loaddata) waits for the post before
+    # it exits, instead of dropping it; the admin's requests still don't wait for it
+    transaction.on_commit(lambda: threading.Thread(target=_post, args=(tags,), daemon=False).start())
