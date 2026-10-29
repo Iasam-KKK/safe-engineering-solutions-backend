@@ -13,6 +13,9 @@ class SiteSettings(models.Model):
         max_length=20, default="923329866561", help_text="Digits only with country code, used for wa.me links"
     )
     linkedin_url = models.URLField(blank=True, default="https://www.linkedin.com/company/safe-engineering-solutions2/")
+    instagram_url = models.URLField(
+        blank=True, help_text="The company's Instagram page. Empty: the Instagram button is left off the About page."
+    )
     fiverr_url = models.URLField(blank=True)
 
     booking_url = models.URLField(

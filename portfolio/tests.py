@@ -99,6 +99,16 @@ class SeededApiTests(TestCase):
         self.assertEqual(data["settings"]["rating"]["value"], 4.9)
         self.assertEqual(len(data["partners"]), 8)
 
+    def test_instagram_page_is_served_once_it_is_set(self):
+        from content.models import SiteSettings
+
+        # blank until Saif adds the page in the admin (the About page then leaves the button off)
+        self.assertEqual(self.client.get("/api/site/").json()["settings"]["instagram_url"], "")
+        s = SiteSettings.load()
+        s.instagram_url = "https://www.instagram.com/example/"
+        s.save()
+        self.assertEqual(self.client.get("/api/site/").json()["settings"]["instagram_url"], "https://www.instagram.com/example/")
+
 
 @override_settings(MEDIA_ROOT="test_media_tmp", REVALIDATE_SECRET="")
 class AdminScreensTests(TestCase):

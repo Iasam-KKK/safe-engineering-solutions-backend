@@ -12,7 +12,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         fields = [
-            "company_name", "email", "whatsapp_number", "whatsapp_url", "linkedin_url", "fiverr_url",
+            "company_name", "email", "whatsapp_number", "whatsapp_url", "linkedin_url", "instagram_url", "fiverr_url",
             "booking_url", "consultation_length", "stamping_engineer", "stamping_license", "rating",
         ]
 

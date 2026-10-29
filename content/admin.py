@@ -12,7 +12,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     """Single row: the list page jumps straight to the edit form."""
 
     fieldsets = [
-        ("Company", {"fields": ["company_name", "email", "whatsapp_number", "linkedin_url", "fiverr_url"]}),
+        ("Company", {"fields": ["company_name", "email", "whatsapp_number", "linkedin_url", "instagram_url", "fiverr_url"]}),
         ("Video consultation", {"fields": ["booking_url", "consultation_length"]}),
         ("California stamping", {"fields": ["stamping_engineer", "stamping_license"]}),
         ("Review rating", {"fields": [("rating_value", "rating_count"), ("rating_source", "rating_as_of")]}),

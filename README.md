@@ -30,7 +30,7 @@ uv run python manage.py runserver 127.0.0.1:8000
 | Portfolio › Projects | Add a project: title, categories, location (no street address), facts (SCOPE, CODES...), then its sheets and renders. Tick **Show on home** to put it in the homepage "Best work" pile; set **Stage** to put it in the Running / Built strips. |
 | Portfolio › Sheets and images | Inside each project. *Drawing sheet* = white paper shown whole; *Render or photo* = fills the frame. Fill **Before image** to make a before/after slider. Leave **Image** empty and pick a placeholder sketch until the real sheet arrives. **In gallery** = project page, **In pile** = homepage pile. |
 | Portfolio › Categories | Filter chips on /projects and tabs on the homepage, with their order. |
-| Content › Site settings | Email, WhatsApp, LinkedIn, Fiverr, **booking link (Calendly)**, call length, **California stamping engineer + license**, rating figures and the date you checked them. |
+| Content › Site settings | Email, WhatsApp, LinkedIn, Instagram, Fiverr, **booking link (Calendly)**, call length, **California stamping engineer + license**, rating figures and the date you checked them. |
 | Content › Partners | The homepage ticker. Upload a logo when the firm sends one. |
 | Content › Reviews | Reviews copied word for word. Use initials unless the client agreed to their name. |
 | Content › Team members | The About page. |

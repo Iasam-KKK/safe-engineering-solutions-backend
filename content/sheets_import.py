@@ -246,6 +246,7 @@ CONTACT_FIELDS = [
     ("email", "email"),
     ("whatsapp", "whatsapp_number"),
     ("linkedin", "linkedin_url"),
+    ("instagram", "instagram_url"),
     ("fiverr", "fiverr_url"),
     ("booking", "booking_url"),
     ("how long", "consultation_length"),
