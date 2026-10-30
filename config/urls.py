@@ -6,7 +6,7 @@ from django.urls import path, re_path
 from django.views.static import serve
 
 from content.views import Site
-from leads.views import InquiryCreate
+from leads.views import CallSlots, InquiryCreate
 from portfolio.views import CategoryList, Home, ProjectDetail, ProjectList
 
 admin.site.site_header = "SAFE Engineering Solutions"
@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/projects/", ProjectList.as_view(), name="api-projects"),
     path("api/projects/<slug:slug>/", ProjectDetail.as_view(), name="api-project"),
     path("api/inquiries/", InquiryCreate.as_view(), name="api-inquiries"),
+    path("api/booking/slots/", CallSlots.as_view(), name="api-booking-slots"),
 ]
 
 # Uploaded project images. On a laptop Django serves them; live, the web server or

@@ -49,10 +49,11 @@ requests==2.34.2
     # via safe-backend
 sqlparse==0.6.0
     # via django
-tzdata==2026.5 ; sys_platform == 'win32'
+tzdata==2026.5
     # via
     #   django
     #   psycopg
+    #   safe-backend
 urllib3==2.8.0
     # via requests
 whitenoise==6.12.0

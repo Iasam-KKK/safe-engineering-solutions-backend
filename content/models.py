@@ -1,7 +1,15 @@
-"""Site-wide content edited in the admin: contact details, partners, reviews and the team."""
+"""Site-wide content edited in the admin: contact details, video-call hours, partners, reviews and the team."""
 
+from zoneinfo import available_timezones
+
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+
+def validate_timezone(value):
+    if value not in available_timezones():
+        raise ValidationError(f"{value} is not a time zone name. Use one like Asia/Karachi.")
 
 
 class SiteSettings(models.Model):
@@ -18,11 +26,42 @@ class SiteSettings(models.Model):
     )
     fiverr_url = models.URLField(blank=True)
 
-    booking_url = models.URLField(
-        blank=True,
-        help_text="Calendly (or similar) link for video consultations. Empty: the button opens an email instead.",
+    # video calls: the site's own calendar, unless a booking link is set
+    booking_timezone = models.CharField(
+        "your time zone",
+        max_length=60,
+        default="Asia/Karachi",
+        validators=[validate_timezone],
+        help_text="The hours below are in this time zone. Visitors see every time in their own, and never see this.",
     )
-    consultation_length = models.CharField(max_length=40, blank=True, help_text='e.g. "30 minutes"')
+    booking_slot_minutes = models.PositiveSmallIntegerField(
+        "length of a call (minutes)", default=30, validators=[MinValueValidator(10), MaxValueValidator(180)]
+    )
+    booking_notice_hours = models.PositiveSmallIntegerField(
+        "shortest notice (hours)", default=24, help_text="How far ahead a call must be booked."
+    )
+    booking_days_ahead = models.PositiveSmallIntegerField(
+        "days ahead to offer", default=30, validators=[MinValueValidator(1), MaxValueValidator(180)]
+    )
+    meeting_link = models.URLField(
+        "video link",
+        blank=True,
+        help_text=(
+            "Optional: your Google Meet or Zoom link. It goes in the booking confirmation and the calendar invite. "
+            "Empty: visitors are told you will send the link before the call."
+        ),
+    )
+    booking_url = models.URLField(
+        "outside booking page",
+        blank=True,
+        help_text=(
+            "Optional: a Calendly, Cal.com or Google Calendar booking link. When set, it shows on the contact page "
+            "in place of the site's own calendar, and the hours below are not used."
+        ),
+    )
+    consultation_length = models.CharField(
+        max_length=40, blank=True, help_text='With an outside booking page: shown under it, e.g. "30 minutes"'
+    )
 
     # California stamping
     stamping_engineer = models.CharField(max_length=120, blank=True, help_text='e.g. "Jane Doe, PE"')
@@ -51,6 +90,57 @@ class SiteSettings(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class VideoCallHours(models.Model):
+    """One stretch of a weekday when video calls can be booked, in the time zone set above it."""
+
+    class Weekday(models.IntegerChoices):
+        MONDAY = 0, "Monday"
+        TUESDAY = 1, "Tuesday"
+        WEDNESDAY = 2, "Wednesday"
+        THURSDAY = 3, "Thursday"
+        FRIDAY = 4, "Friday"
+        SATURDAY = 5, "Saturday"
+        SUNDAY = 6, "Sunday"
+
+    settings = models.ForeignKey(SiteSettings, on_delete=models.CASCADE, related_name="call_hours", default=1, editable=False)
+    weekday = models.PositiveSmallIntegerField(choices=Weekday)
+    start = models.TimeField()
+    end = models.TimeField(help_text="An end earlier than the start runs past midnight, e.g. 7 PM to 1 AM")
+
+    class Meta:
+        ordering = ["weekday", "start"]
+        verbose_name = "video call hours"
+        verbose_name_plural = "video call hours (when clients can book you, in your time zone)"
+
+    def __str__(self):
+        return f"{self.get_weekday_display()} {self.start:%H:%M} to {self.end:%H:%M}"
+
+    def clean(self):
+        if self.start is not None and self.start == self.end:
+            raise ValidationError({"end": "The end must differ from the start."})
+
+
+class VideoCallDayOff(models.Model):
+    """Dates when no video calls can be booked: holidays, site visits, travel."""
+
+    settings = models.ForeignKey(SiteSettings, on_delete=models.CASCADE, related_name="call_days_off", default=1, editable=False)
+    first_day = models.DateField()
+    last_day = models.DateField(blank=True, null=True, help_text="Empty: just the one day")
+    note = models.CharField(max_length=80, blank=True, help_text="Only you see this")
+
+    class Meta:
+        ordering = ["first_day"]
+        verbose_name = "day off from video calls"
+        verbose_name_plural = "days off from video calls"
+
+    def __str__(self):
+        return f"{self.first_day} to {self.last_day or self.first_day}"
+
+    def clean(self):
+        if self.first_day and self.last_day and self.last_day < self.first_day:
+            raise ValidationError({"last_day": "The last day can't be before the first."})
 
 
 class Partner(models.Model):

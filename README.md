@@ -30,11 +30,11 @@ uv run python manage.py runserver 127.0.0.1:8000
 | Portfolio › Projects | Add a project: title, categories, location (no street address), facts (SCOPE, CODES...), then its sheets and renders. Tick **Show on home** to put it in the homepage "Best work" pile; set **Stage** to put it in the Running / Built strips. |
 | Portfolio › Sheets and images | Inside each project. *Drawing sheet* = white paper shown whole; *Render or photo* = fills the frame. Fill **Before image** to make a before/after slider. Leave **Image** empty and pick a placeholder sketch until the real sheet arrives. **In gallery** = project page, **In pile** = homepage pile. |
 | Portfolio › Categories | Filter chips on /projects and tabs on the homepage, with their order. |
-| Content › Site settings | Email, WhatsApp, LinkedIn, Instagram, Fiverr, **booking link (Calendly)**, call length, **California stamping engineer + license**, rating figures and the date you checked them. |
+| Content › Site settings | Email, WhatsApp, LinkedIn, Instagram, Fiverr, **California stamping engineer + license**, rating figures and the date you checked them, and **video calls: your time zone, the hours and days off clients can book, call length, your video link** (see "Video calls" below). |
 | Content › Partners | The homepage ticker. Upload a logo when the firm sends one. |
 | Content › Reviews | Reviews copied word for word. Use initials unless the client agreed to their name. |
 | Content › Team members | The About page. |
-| Requests from the website › Inquiries | Quote, video-consultation and stamping requests. Attached files download from here only (they have no public link). Set the status as you follow up. |
+| Requests from the website › Inquiries | Quote, video-consultation and stamping requests. Attached files download from here only (they have no public link). Set the status as you follow up. A booked video call shows its time in your zone and theirs; the **Upcoming** filter lists them. |
 
 Saving anything refreshes the affected pages of the public site within seconds
 (Django calls the frontend's `/api/revalidate` with `REVALIDATE_SECRET`).
@@ -49,7 +49,24 @@ All read endpoints are public and read-only.
 | `GET /api/home/` | homepage "Best work" tabs with their sheets, running and built strips |
 | `GET /api/projects/` | published projects (`?category=<slug>`, `?stage=running`, `?home=1`) |
 | `GET /api/projects/<slug>/` | one project with facts and every sheet / image |
-| `POST /api/inquiries/` | multipart form from the site: `kind`, `name`, `email`, `role`, `project_type`, `location`, `timing`, `details`, `files` (repeat), honeypot `website`. Rate-limited (6 per hour per IP by default). |
+| `GET /api/booking/slots/` | the open video-call times as UTC instants, and the length of a call. Not cached. Names no time zone of ours. |
+| `POST /api/inquiries/` | multipart form from the site: `kind`, `name`, `email`, `role`, `project_type`, `location`, `timing`, `details`, `files` (repeat), honeypot `website`; a booking adds `scheduled_at` and `client_timezone`. Rate-limited (6 per hour per IP by default). |
+
+## Video calls
+
+Clients book on the contact page. Everything is in **Content › Site settings**, under "Video calls":
+
+- **Your time zone**, and in the table at the bottom of the page the **hours** clients can book, in that zone. An end
+  earlier than the start runs past midnight. Below it, **days off**.
+- Visitors see every time in their own time zone (detected, and they can change it). They never see yours.
+- A booked time disappears from the calendar. To free one, set that inquiry's status to **Closed**.
+- The inquiry email to `INQUIRY_NOTIFY_EMAILS` carries the time in both zones and a calendar invite. The client gets a
+  confirmation with an invite too, once an email server is set (`EMAIL_HOST`). Without one, the booking still shows in
+  the admin and the client still gets their confirmation on the page, with add-to-calendar buttons.
+- **Video link** is optional: your Google Meet or Zoom link, sent with the confirmation. Empty, clients are told you
+  will send it before the call.
+- **Outside booking page** is optional too: a Calendly, Cal.com or Google Calendar booking link shows in place of this
+  calendar, and those services then handle reminders, rescheduling and your calendar's busy times.
 
 ## Going live
 

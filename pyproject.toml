@@ -15,5 +15,6 @@ dependencies = [
     "psycopg[binary]>=3.3",
     "pymupdf>=1.26,<2",
     "requests>=2.34",
+    "tzdata>=2026.5",
     "whitenoise>=6.12",
 ]

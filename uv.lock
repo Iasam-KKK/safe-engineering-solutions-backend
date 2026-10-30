@@ -504,6 +504,7 @@ dependencies = [
     { name = "psycopg", extra = ["binary"] },
     { name = "pymupdf" },
     { name = "requests" },
+    { name = "tzdata" },
     { name = "whitenoise" },
 ]
 
@@ -520,6 +521,7 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3" },
     { name = "pymupdf", specifier = ">=1.26,<2" },
     { name = "requests", specifier = ">=2.34" },
+    { name = "tzdata", specifier = ">=2026.5" },
     { name = "whitenoise", specifier = ">=6.12" },
 ]
 

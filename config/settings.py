@@ -141,9 +141,11 @@ REST_FRAMEWORK = {
     "NUM_PROXIES": env.int("DRF_NUM_PROXIES", default=0) or None,
 }
 
-# ---------- email (new-inquiry alerts to Saif) ----------
+# ---------- email (new-inquiry alerts to Saif, booking confirmations to clients) ----------
 # Console output on a laptop; set EMAIL_HOST etc. on the server.
-if env("EMAIL_HOST", default=""):
+# Without it, clients get no email: their booking confirmation is the page they booked on.
+EMAIL_CONFIGURED = bool(env("EMAIL_HOST", default=""))
+if EMAIL_CONFIGURED:
     MAILERS = {
         "default": {
             "BACKEND": "django.core.mail.backends.smtp.EmailBackend",

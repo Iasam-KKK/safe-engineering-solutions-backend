@@ -3,6 +3,7 @@
 import uuid
 
 from django.db import models
+from django.db.models import Q
 
 from .storage import private_storage
 
@@ -54,6 +55,11 @@ class Inquiry(models.Model):
     details = models.TextField(blank=True)
     source_page = models.CharField(max_length=200, blank=True, help_text="Page the request was sent from")
 
+    # a video call picked on the contact page's calendar
+    scheduled_at = models.DateTimeField("video call at", null=True, blank=True, db_index=True)
+    call_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    client_timezone = models.CharField(max_length=60, blank=True, help_text="The time zone the client booked in")
+
     status = models.CharField(max_length=20, choices=Status, default=Status.NEW)
     internal_notes = models.TextField(blank=True, help_text="Only visible in the admin")
     ip_address = models.GenericIPAddressField(null=True, blank=True, editable=False)
@@ -62,6 +68,14 @@ class Inquiry(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name_plural = "inquiries"
+        constraints = [
+            # two people can't book the same time, even in the same instant; closing a request frees its time
+            models.UniqueConstraint(
+                fields=["scheduled_at"],
+                condition=Q(scheduled_at__isnull=False) & ~Q(status="closed"),
+                name="one_call_per_time",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.get_kind_display()} from {self.name}"
